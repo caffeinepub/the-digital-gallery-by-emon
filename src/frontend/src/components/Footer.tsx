@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { getSettings } from "../lib/data";
+import { useData } from "../lib/DataContext";
 
 export default function Footer() {
-  const settings = getSettings();
+  const { settings } = useData();
   return (
     <footer className="bg-[#212121] text-white">
       <div className="max-w-7xl mx-auto px-4 py-12">

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
+import { Menu, Search, ShoppingCart, X } from "lucide-react";
 import { useState } from "react";
-import { getSettings } from "../lib/data";
+import { useData } from "../lib/DataContext";
 
 interface NavbarProps {
   cartCount?: number;
@@ -9,7 +9,7 @@ interface NavbarProps {
 
 export default function Navbar({ cartCount = 0 }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const settings = getSettings();
+  const { settings } = useData();
   const navigate = useNavigate();
   const isDark = settings.theme === "dark";
 
@@ -29,9 +29,17 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
       <nav className={`${navBg} text-white`}>
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-10 h-10 bg-[#FED100] rounded flex items-center justify-center font-bold text-lg font-playfair text-[#212121]">
-              {settings.logoText}
-            </div>
+            {settings.logoImage ? (
+              <img
+                src={settings.logoImage}
+                alt="logo"
+                className="h-10 max-w-[120px] object-contain"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-[#FED100] rounded flex items-center justify-center font-bold text-lg font-playfair text-[#212121]">
+                {settings.logoText}
+              </div>
+            )}
             <span className="font-playfair text-lg font-semibold hidden sm:block leading-tight">
               The Digital Gallery
               <br />

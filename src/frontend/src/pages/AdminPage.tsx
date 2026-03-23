@@ -1,41 +1,37 @@
 import {
   Download,
   Edit2,
+  Image,
   LayoutDashboard,
   Lock,
   LogOut,
+  MessageSquare,
   Minus,
   Package,
   Plus,
   Save,
   Settings,
   ShoppingBag,
+  Star,
   Tag,
   Trash2,
   TrendingUp,
+  Upload,
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useData } from "../lib/DataContext";
 import {
   type Banner,
   type FinanceRecord,
   type Order,
   type Product,
+  type Review,
   STATUS_LABELS,
   type Settings as SettingsType,
   type Supplier,
   backupData,
-  getFinance,
-  getOrders,
-  getProducts,
-  getSettings,
-  getSuppliers,
-  saveFinance,
-  saveOrders,
-  saveProducts,
-  saveSettings,
-  saveSuppliers,
 } from "../lib/data";
 
 type Tab =
@@ -45,6 +41,7 @@ type Tab =
   | "products"
   | "finance"
   | "suppliers"
+  | "reviews"
   | "settings";
 
 export default function AdminPage() {
@@ -52,24 +49,24 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState<Tab>("dashboard");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [finance, setFinance] = useState<FinanceRecord[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [settings, setSettings] = useState<SettingsType>(getSettings());
+  const {
+    products,
+    orders,
+    finance,
+    suppliers,
+    settings,
+    reviews,
+    setProducts,
+    setOrders,
+    setFinance,
+    setSuppliers,
+    setSettings,
+    setReviews,
+  } = useData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    if (authed) {
-      setProducts(getProducts());
-      setOrders(getOrders());
-      setFinance(getFinance());
-      setSuppliers(getSuppliers());
-    }
-  }, [authed]);
-
   function login() {
-    const s = getSettings();
+    const s = settings;
     if (password === s.adminPassword) {
       setAuthed(true);
       setError("");
@@ -127,6 +124,7 @@ export default function AdminPage() {
     { key: "products", label: "Products", icon: Tag },
     { key: "finance", label: "Finance", icon: TrendingUp },
     { key: "suppliers", label: "Suppliers", icon: Users },
+    { key: "reviews", label: "Reviews", icon: MessageSquare },
     { key: "settings", label: "Settings", icon: Settings },
   ] as const;
 
@@ -228,7 +226,6 @@ export default function AdminPage() {
               orders={orders}
               onSave={(u) => {
                 setOrders(u);
-                saveOrders(u);
               }}
             />
           )}
@@ -237,7 +234,6 @@ export default function AdminPage() {
               products={products}
               onSave={(u) => {
                 setProducts(u);
-                saveProducts(u);
               }}
             />
           )}
@@ -247,11 +243,9 @@ export default function AdminPage() {
               settings={settings}
               onSave={(u) => {
                 setProducts(u);
-                saveProducts(u);
               }}
               onSaveSettings={(u) => {
                 setSettings(u);
-                saveSettings(u);
               }}
             />
           )}
@@ -260,7 +254,6 @@ export default function AdminPage() {
               records={finance}
               onSave={(u) => {
                 setFinance(u);
-                saveFinance(u);
               }}
             />
           )}
@@ -269,16 +262,17 @@ export default function AdminPage() {
               suppliers={suppliers}
               onSave={(u) => {
                 setSuppliers(u);
-                saveSuppliers(u);
               }}
             />
+          )}
+          {tab === "reviews" && (
+            <ReviewsTab reviews={reviews} onSave={setReviews} />
           )}
           {tab === "settings" && (
             <SettingsTab
               settings={settings}
               onSave={(u) => {
                 setSettings(u);
-                saveSettings(u);
               }}
             />
           )}
@@ -854,6 +848,52 @@ function ProductsTab({
                 Active (visible to customers)
               </label>
             </div>
+            <div className="col-span-2 md:col-span-3">
+              <div className="text-xs text-gray-500 block mb-1">
+                Product Image (JPG/PNG)
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors">
+                  <Upload size={14} />
+                  Upload Image
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 600000) {
+                        alert(
+                          "Image is too large (max 500KB). Please compress it first.",
+                        );
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () =>
+                        setForm({ ...form, image: reader.result as string });
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
+                {form.image && (
+                  <>
+                    <img
+                      src={form.image}
+                      alt="Product"
+                      className="h-16 w-16 object-cover rounded border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, image: undefined })}
+                      className="text-red-400 hover:text-red-600 text-xs"
+                    >
+                      Remove
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
           <div className="flex gap-3 mt-4">
             <button
@@ -1356,6 +1396,47 @@ function SettingsTab({
             </div>
           ))}
         </div>
+        <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            Payment Details Visibility
+          </div>
+          <label className="flex items-center justify-between cursor-pointer">
+            <div>
+              <div className="font-medium text-sm">
+                Show UPI Details to customers
+              </div>
+              <div className="text-xs text-gray-400">
+                Display UPI ID in the payment popup
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={form.showUpiDetails !== false}
+              onChange={(e) =>
+                setForm({ ...form, showUpiDetails: e.target.checked })
+              }
+              className="w-4 h-4"
+            />
+          </label>
+          <label className="flex items-center justify-between cursor-pointer">
+            <div>
+              <div className="font-medium text-sm">
+                Show Bank Transfer Details to customers
+              </div>
+              <div className="text-xs text-gray-400">
+                Display bank name, A/C number and IFSC in the payment popup
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={form.showBankDetails !== false}
+              onChange={(e) =>
+                setForm({ ...form, showBankDetails: e.target.checked })
+              }
+              className="w-4 h-4"
+            />
+          </label>
+        </div>
       </div>
 
       {/* Announcement Bar */}
@@ -1757,6 +1838,207 @@ function SettingsTab({
         </div>
       </div>
 
+      {/* Logo & Branding */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-1 flex items-center gap-2">
+          <Image size={16} /> Logo &amp; Branding
+        </h3>
+        <p className="text-xs text-gray-400 mb-4">
+          This image will appear in the navbar instead of the logo text
+        </p>
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors">
+            <Upload size={14} /> Upload Logo (JPG/PNG)
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 600000) {
+                  alert("Image too large (max ~500KB)");
+                  return;
+                }
+                const reader = new FileReader();
+                reader.onload = () =>
+                  setForm({ ...form, logoImage: reader.result as string });
+                reader.readAsDataURL(file);
+              }}
+            />
+          </label>
+          {form.logoImage && (
+            <>
+              <img
+                src={form.logoImage}
+                alt="Logo preview"
+                className="object-contain rounded border border-gray-200"
+                style={{ maxHeight: 100 }}
+              />
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, logoImage: undefined })}
+                className="text-red-400 hover:text-red-600 text-xs"
+              >
+                Remove
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Payment QR Code */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-1 flex items-center gap-2">
+          <Image size={16} /> Payment QR Code
+        </h3>
+        <p className="text-xs text-gray-400 mb-4">
+          This QR code will be shown in the payment popup
+        </p>
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors">
+            <Upload size={14} /> Upload QR Code (JPG/PNG)
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 600000) {
+                  alert("Image too large (max ~500KB)");
+                  return;
+                }
+                const reader = new FileReader();
+                reader.onload = () =>
+                  setForm({ ...form, qrCodeImage: reader.result as string });
+                reader.readAsDataURL(file);
+              }}
+            />
+          </label>
+          {form.qrCodeImage && (
+            <>
+              <img
+                src={form.qrCodeImage}
+                alt="QR Code preview"
+                className="object-contain rounded border border-gray-200"
+                style={{ maxHeight: 150 }}
+              />
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, qrCodeImage: undefined })}
+                className="text-red-400 hover:text-red-600 text-xs"
+              >
+                Remove
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Header Slideshow */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Image size={16} /> Header Slideshow
+          </h3>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.heroSlideshowEnabled || false}
+              onChange={(e) =>
+                setForm({ ...form, heroSlideshowEnabled: e.target.checked })
+              }
+              className="w-4 h-4"
+            />
+            <span className="text-sm">
+              {form.heroSlideshowEnabled ? "Enabled" : "Disabled"}
+            </span>
+          </label>
+        </div>
+        <div className="mb-4">
+          <div className="text-xs text-gray-500 mb-1">Slide Interval</div>
+          <select
+            value={form.heroSlideshowInterval || 4000}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                heroSlideshowInterval: Number(e.target.value),
+              })
+            }
+            className="border rounded px-3 py-2 text-sm focus:outline-none"
+          >
+            <option value={2000}>2 seconds</option>
+            <option value={4000}>4 seconds</option>
+            <option value={6000}>6 seconds</option>
+            <option value={8000}>8 seconds</option>
+          </select>
+        </div>
+        <div className="mb-3">
+          <label className="cursor-pointer inline-flex items-center gap-2 bg-[#FED100]/10 border border-[#FED100]/40 text-[#7a6600] rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#FED100]/20 transition-colors">
+            <Upload size={14} /> Upload Slide Image
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 1000000) {
+                  alert("Image too large (max ~1MB for slides)");
+                  return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const newSlide = {
+                    id: `slide${Date.now()}`,
+                    image: reader.result as string,
+                  };
+                  setForm({
+                    ...form,
+                    heroSlideshow: [...(form.heroSlideshow || []), newSlide],
+                  });
+                };
+                reader.readAsDataURL(file);
+              }}
+            />
+          </label>
+        </div>
+        {(form.heroSlideshow || []).length === 0 && (
+          <p className="text-xs text-gray-400">
+            No slides added yet. Upload images above.
+          </p>
+        )}
+        <div className="flex flex-wrap gap-3 mt-2">
+          {(form.heroSlideshow || []).map((slide, idx) => (
+            <div key={slide.id} className="relative group">
+              <img
+                src={slide.image}
+                alt={`Slide ${idx + 1}`}
+                className="h-16 w-24 object-cover rounded-lg border border-gray-200"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    heroSlideshow: (form.heroSlideshow || []).filter(
+                      (s) => s.id !== slide.id,
+                    ),
+                  })
+                }
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X size={10} />
+              </button>
+              <div className="text-xs text-center text-gray-400 mt-0.5">
+                #{idx + 1}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Admin Password */}
       <div className="bg-white rounded-xl border border-gray-100 p-5">
         <h3 className="font-semibold mb-4">Admin Password</h3>
@@ -1775,6 +2057,340 @@ function SettingsTab({
       >
         <Save size={16} /> {saved ? "Saved!" : "Save All Settings"}
       </button>
+    </div>
+  );
+}
+
+function ReviewsTab({
+  reviews,
+  onSave,
+}: { reviews: Review[]; onSave: (r: Review[]) => void }) {
+  const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState<Partial<Review>>({});
+
+  const EMPTY: Partial<Review> = {
+    name: "",
+    rating: 5,
+    text: "",
+    image: undefined,
+    date: new Date().toISOString().split("T")[0],
+    active: true,
+  };
+
+  function openAdd() {
+    setForm({ ...EMPTY });
+    setEditId(null);
+    setShowModal(true);
+  }
+
+  function openEdit(r: Review) {
+    setForm({ ...r });
+    setEditId(r.id);
+    setShowModal(true);
+  }
+
+  function saveReview() {
+    if (!form.name || !form.text) return;
+    if (editId) {
+      onSave(
+        reviews.map((r) =>
+          r.id === editId ? ({ ...r, ...form } as Review) : r,
+        ),
+      );
+    } else {
+      const newR: Review = {
+        id: `rev${Date.now()}`,
+        name: form.name || "",
+        rating: form.rating || 5,
+        text: form.text || "",
+        image: form.image,
+        date: form.date || new Date().toISOString().split("T")[0],
+        active: form.active !== false,
+      };
+      onSave([...reviews, newR]);
+    }
+    setShowModal(false);
+    setEditId(null);
+    setForm({});
+  }
+
+  function deleteReview(id: string) {
+    if (window.confirm("Delete this review?")) {
+      onSave(reviews.filter((r) => r.id !== id));
+    }
+  }
+
+  function toggleActive(id: string, active: boolean) {
+    onSave(reviews.map((r) => (r.id === id ? { ...r, active } : r)));
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold">All Reviews ({reviews.length})</h3>
+        <button
+          type="button"
+          onClick={openAdd}
+          data-ocid="reviews.open_modal_button"
+          className="flex items-center gap-2 bg-[#FED100] text-[#212121] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
+        >
+          <Plus size={16} /> Add Review
+        </button>
+      </div>
+
+      {reviews.length === 0 && (
+        <div
+          data-ocid="reviews.empty_state"
+          className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-400"
+        >
+          <MessageSquare size={32} className="mx-auto mb-2 opacity-30" />
+          <p>No reviews yet. Add your first review above.</p>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {reviews.map((r, idx) => (
+          <div
+            key={r.id}
+            data-ocid={`reviews.item.${idx + 1}`}
+            className={`bg-white rounded-xl border p-4 flex items-start gap-3 ${!r.active ? "opacity-60" : "border-gray-100"}`}
+          >
+            {r.image && (
+              <img
+                src={r.image}
+                alt="review"
+                className="w-14 h-14 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-sm">{r.name}</span>
+                <span className="text-[#FED100] text-sm">
+                  {Array.from({ length: r.rating }, (_, i) => (
+                    <Star
+                      key={`star-${r.id}-${i}`}
+                      size={12}
+                      fill="#FED100"
+                      className="inline"
+                    />
+                  ))}
+                </span>
+                <span className="text-xs text-gray-400">{r.date}</span>
+              </div>
+              <p className="text-xs text-gray-600 line-clamp-2">{r.text}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <label className="flex items-center gap-1 cursor-pointer text-xs text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={r.active}
+                  onChange={(e) => toggleActive(r.id, e.target.checked)}
+                  className="w-3 h-3"
+                  data-ocid={`reviews.checkbox.${idx + 1}`}
+                />
+                Active
+              </label>
+              <button
+                type="button"
+                onClick={() => openEdit(r)}
+                data-ocid={`reviews.edit_button.${idx + 1}`}
+                className="p-1.5 text-[#b38b00] hover:bg-yellow-50 rounded"
+              >
+                <Edit2 size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteReview(r.id)}
+                data-ocid={`reviews.delete_button.${idx + 1}`}
+                className="p-1.5 text-red-400 hover:bg-red-50 rounded"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add/Edit Modal */}
+      {showModal && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          data-ocid="reviews.modal"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-semibold text-lg font-playfair">
+                {editId ? "Edit Review" : "Add Review"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowModal(false);
+                  setForm({});
+                }}
+                data-ocid="reviews.close_button"
+                className="p-1 text-gray-400 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="rev-name"
+                  className="text-xs text-gray-500 block mb-1"
+                >
+                  Customer Name *
+                </label>
+                <input
+                  id="rev-name"
+                  value={form.name || ""}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  data-ocid="reviews.input"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+                  placeholder="e.g. Priya S."
+                />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 block mb-2">Rating *</div>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setForm({ ...form, rating: n })}
+                      className={`w-9 h-9 rounded-lg border-2 flex items-center justify-center transition-colors ${(form.rating || 5) >= n ? "border-[#FED100] bg-[#FED100]/10 text-[#b38b00]" : "border-gray-200 text-gray-300"}`}
+                    >
+                      <Star
+                        size={16}
+                        fill={(form.rating || 5) >= n ? "#FED100" : "none"}
+                      />
+                    </button>
+                  ))}
+                  <span className="text-sm text-gray-500 self-center">
+                    {form.rating || 5}/5
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label
+                  htmlFor="rev-text"
+                  className="text-xs text-gray-500 block mb-1"
+                >
+                  Review Text *
+                </label>
+                <textarea
+                  id="rev-text"
+                  value={form.text || ""}
+                  onChange={(e) => setForm({ ...form, text: e.target.value })}
+                  data-ocid="reviews.textarea"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+                  rows={3}
+                  placeholder="Customer's review..."
+                />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 block mb-1">
+                  Upload Photo / SMS Screenshot (JPG/PNG)
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <label
+                    className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors"
+                    data-ocid="reviews.upload_button"
+                  >
+                    <Upload size={14} /> Upload photo/SMS screenshot
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 1500000) {
+                          alert("Image too large (max ~1.5MB)");
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () =>
+                          setForm({ ...form, image: reader.result as string });
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
+                  {form.image && (
+                    <>
+                      <img
+                        src={form.image}
+                        alt="Preview"
+                        className="h-16 object-contain rounded border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, image: undefined })}
+                        className="text-red-400 hover:text-red-600 text-xs"
+                      >
+                        Remove
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor="rev-date"
+                    className="text-xs text-gray-500 block mb-1"
+                  >
+                    Date
+                  </label>
+                  <input
+                    id="rev-date"
+                    type="date"
+                    value={form.date || ""}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+                  />
+                </div>
+                <div className="flex items-end pb-2">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.active !== false}
+                      onChange={(e) =>
+                        setForm({ ...form, active: e.target.checked })
+                      }
+                      className="w-4 h-4"
+                    />
+                    Active (visible to customers)
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={saveReview}
+                data-ocid="reviews.save_button"
+                className="flex-1 bg-[#FED100] text-[#212121] py-3 rounded-lg font-bold hover:bg-[#e6bc00] flex items-center justify-center gap-2"
+              >
+                <Save size={15} /> {editId ? "Update Review" : "Add Review"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowModal(false);
+                  setForm({});
+                }}
+                data-ocid="reviews.cancel_button"
+                className="border border-gray-300 px-5 py-3 rounded-lg text-sm hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

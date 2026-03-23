@@ -2,7 +2,8 @@ import { CheckCircle, Package, Search } from "lucide-react";
 import { useState } from "react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { type Order, STATUS_LABELS, getOrders, getSettings } from "../lib/data";
+import { useData } from "../lib/DataContext";
+import { type Order, STATUS_LABELS } from "../lib/data";
 
 const STATUS_STEPS: Order["status"][] = [
   "pending",
@@ -15,10 +16,10 @@ const STATUS_STEPS: Order["status"][] = [
 export default function TrackPage() {
   const [query, setQuery] = useState("");
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
-  const settings = getSettings();
+  const { settings, orders: allOrders } = useData();
 
   function search() {
-    const all = getOrders();
+    const all = allOrders;
     const q = query.trim().toUpperCase();
     const found = all.find(
       (o) => o.id.toUpperCase() === q || o.phone === query.trim(),

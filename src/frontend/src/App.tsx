@@ -4,6 +4,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { DataProvider } from "./lib/DataContext";
 import AdminPage from "./pages/AdminPage";
 import HomePage from "./pages/HomePage";
 import OrderPage from "./pages/OrderPage";
@@ -47,5 +48,9 @@ declare module "@tanstack/react-router" {
 }
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <DataProvider>
+      <RouterProvider router={router} />
+    </DataProvider>
+  );
 }

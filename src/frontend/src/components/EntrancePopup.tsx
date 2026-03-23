@@ -1,10 +1,10 @@
 import { Tag, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getSettings } from "../lib/data";
+import { useData } from "../lib/DataContext";
 
 export default function EntrancePopup() {
   const [visible, setVisible] = useState(false);
-  const settings = getSettings();
+  const { settings } = useData();
 
   useEffect(() => {
     if (!settings.popupEnabled) return;

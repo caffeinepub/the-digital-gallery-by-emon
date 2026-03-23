@@ -10,6 +10,7 @@ export interface Product {
   stock: number;
   active: boolean;
   description: string;
+  image?: string; // base64 data URL
 }
 
 export interface Order {
@@ -71,6 +72,16 @@ export interface Banner {
   link?: string;
 }
 
+export interface Review {
+  id: string;
+  name: string;
+  rating: number; // 1-5
+  text: string;
+  image?: string; // base64 - photo or SMS screenshot
+  date: string;
+  active: boolean;
+}
+
 export interface Settings {
   storeName: string;
   adminPassword: string;
@@ -89,6 +100,11 @@ export interface Settings {
   advancedBanners: Banner[];
   trackingEnabled: boolean;
   logoText: string;
+  logoImage?: string; // base64 data URL
+  qrCodeImage?: string; // base64 data URL
+  heroSlideshowEnabled?: boolean;
+  heroSlideshowInterval?: number; // ms, default 4000
+  heroSlideshow?: { id: string; image: string; caption?: string }[];
   theme: "light" | "dark";
   categories: string[];
   pickupCities: string[];
@@ -98,6 +114,8 @@ export interface Settings {
   midPageAdText: string;
   midPageAdSubtext: string;
   midPageAdBg: string;
+  showBankDetails?: boolean; // default: true
+  showUpiDetails?: boolean; // default: true
 }
 
 const DEFAULT_PRODUCTS: Product[] = [
@@ -316,6 +334,11 @@ const DEFAULT_SETTINGS: Settings = {
   ],
   trackingEnabled: true,
   logoText: "TDG",
+  logoImage: undefined,
+  qrCodeImage: undefined,
+  heroSlideshowEnabled: false,
+  heroSlideshowInterval: 4000,
+  heroSlideshow: [],
   theme: "light",
   categories: ["canvas", "collage", "special"],
   pickupCities: ["Basugaon", "Kokrajhar", "Bongaigaon", "Barpeta Road"],
@@ -326,6 +349,8 @@ const DEFAULT_SETTINGS: Settings = {
   midPageAdText: "🎁 Create the perfect gift!",
   midPageAdSubtext: "Premium canvas prints delivered to your door in 3-4 days.",
   midPageAdBg: "#FED100",
+  showBankDetails: true,
+  showUpiDetails: true,
 };
 
 export function getProducts(): Product[] {
@@ -390,6 +415,15 @@ export function saveSettings(settings: Settings) {
   localStorage.setItem("tdg_settings", JSON.stringify(settings));
 }
 
+export function getReviews(): Review[] {
+  const raw = localStorage.getItem("tdg_reviews");
+  return raw ? JSON.parse(raw) : [];
+}
+
+export function saveReviews(reviews: Review[]) {
+  localStorage.setItem("tdg_reviews", JSON.stringify(reviews));
+}
+
 export function backupData() {
   const data = {
     products: getProducts(),
@@ -397,6 +431,7 @@ export function backupData() {
     finance: getFinance(),
     suppliers: getSuppliers(),
     settings: getSettings(),
+    reviews: getReviews(),
     exportedAt: new Date().toISOString(),
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {

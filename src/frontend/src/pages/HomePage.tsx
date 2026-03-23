@@ -11,37 +11,41 @@ import EntrancePopup from "../components/EntrancePopup";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
-import { type Product, getProducts, getSettings } from "../lib/data";
+import { useData } from "../lib/DataContext";
 
-const TESTIMONIALS = [
+const FALLBACK_TESTIMONIALS = [
   {
     name: "Priya S.",
     city: "Bongaigaon",
     text: "Amazing quality! The canvas print looked exactly like the preview. Very happy with the purchase.",
     rating: 5,
+    image: undefined as string | undefined,
   },
   {
     name: "Rahul D.",
     city: "Kokrajhar",
     text: "Fast delivery, great packaging, and the print quality is excellent. Will order again!",
     rating: 5,
+    image: undefined as string | undefined,
   },
   {
     name: "Anjali M.",
     city: "Barpeta Road",
     text: "The collage turned out beautifully. Perfect gift for my parents anniversary.",
     rating: 5,
+    image: undefined as string | undefined,
   },
 ];
 
 export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const { products: allProducts, settings, reviews } = useData();
   const [filter, setFilter] = useState("all");
   const [bannerIdx, setBannerIdx] = useState(0);
+  const [slideIdx, setSlideIdx] = useState(0);
   const [countdown, setCountdown] = useState({ h: 2, m: 45, s: 18 });
-  const settings = getSettings();
   const navigate = useNavigate();
   const bannerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const slideRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isDark = settings.theme === "dark";
 
   const bg = isDark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]";
@@ -49,10 +53,6 @@ export default function HomePage() {
   const tileBg = isDark ? "bg-[#2a2c2a]" : "bg-[#333533]";
   const text = isDark ? "text-white" : "text-[#212121]";
   const subText = isDark ? "text-gray-400" : "text-[#555]";
-
-  useEffect(() => {
-    setProducts(getProducts().filter((p) => p.active));
-  }, []);
 
   useEffect(() => {
     if (!settings.bannersEnabled || settings.bannerTexts.length === 0) return;
@@ -63,6 +63,21 @@ export default function HomePage() {
       if (bannerRef.current) clearInterval(bannerRef.current);
     };
   }, [settings.bannersEnabled, settings.bannerTexts.length]);
+
+  // Slideshow interval
+  const slides = settings.heroSlideshow || [];
+  const slideshowActive = settings.heroSlideshowEnabled && slides.length > 0;
+  const slideInterval = settings.heroSlideshowInterval || 4000;
+
+  useEffect(() => {
+    if (!slideshowActive) return;
+    slideRef.current = setInterval(() => {
+      setSlideIdx((i) => (i + 1) % slides.length);
+    }, slideInterval);
+    return () => {
+      if (slideRef.current) clearInterval(slideRef.current);
+    };
+  }, [slideshowActive, slides.length, slideInterval]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -88,6 +103,7 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
+  const products = allProducts.filter((p) => p.active);
   const allCategories = [
     "all",
     ...Array.from(new Set(products.map((p) => p.category))),
@@ -103,6 +119,19 @@ export default function HomePage() {
   const midPageAd = settings.advancedBanners?.find(
     (b) => b.type === "midpage" && b.active,
   );
+
+  // Reviews: use dynamic reviews if any active exist, else fallback
+  const activeReviews = reviews.filter((r) => r.active);
+  const displayReviews =
+    activeReviews.length > 0
+      ? activeReviews.map((r) => ({
+          name: r.name,
+          city: "",
+          text: r.text,
+          rating: r.rating,
+          image: r.image,
+        }))
+      : FALLBACK_TESTIMONIALS;
 
   return (
     <div className={`min-h-screen ${bg} font-inter`}>
@@ -132,8 +161,47 @@ export default function HomePage() {
       )}
 
       {/* Hero */}
-      <section className={`${heroSectionBg} text-white`}>
-        <div className="max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
+      <section
+        className={`${heroSectionBg} text-white relative overflow-hidden`}
+        style={{ minHeight: slideshowActive ? "420px" : undefined }}
+      >
+        {/* Slideshow background */}
+        {slideshowActive && (
+          <div className="absolute inset-0">
+            {slides.map((slide, i) => (
+              <div
+                key={slide.id}
+                className="absolute inset-0 transition-opacity duration-1000"
+                style={{ opacity: i === slideIdx ? 1 : 0 }}
+              >
+                <img
+                  src={slide.image}
+                  alt={slide.caption || "Slide"}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/50" />
+              </div>
+            ))}
+            {/* Dot indicators */}
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+              {slides.map((slide, i) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  onClick={() => setSlideIdx(i)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    i === slideIdx
+                      ? "bg-[#FED100] w-4"
+                      : "bg-white/50 hover:bg-white/80"
+                  }`}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
           <div className="flex-1">
             <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-3">
               Premium Canvas Prints
@@ -172,33 +240,35 @@ export default function HomePage() {
               </button>
             </div>
           </div>
-          <div className="flex-1 flex justify-center">
-            <div className="relative">
-              <div className="w-64 h-64 md:w-80 md:h-80 bg-gradient-to-br from-[#FED100]/20 to-[#FFEE32]/10 rounded-2xl flex items-center justify-center border border-[#FED100]/30">
-                <div className="text-center">
-                  <div className="font-playfair text-5xl font-bold text-[#FED100] mb-2">
-                    TDG
-                  </div>
-                  <div className="text-gray-300 text-sm">
-                    Premium Canvas Prints
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    {['4x6"', '8x10"', '12x16"', '18x24"'].map((s) => (
-                      <div
-                        key={s}
-                        className="bg-[#FED100]/10 rounded text-xs text-center py-1 text-[#FED100] border border-[#FED100]/20"
-                      >
-                        {s}
-                      </div>
-                    ))}
+          {!slideshowActive && (
+            <div className="flex-1 flex justify-center">
+              <div className="relative">
+                <div className="w-64 h-64 md:w-80 md:h-80 bg-gradient-to-br from-[#FED100]/20 to-[#FFEE32]/10 rounded-2xl flex items-center justify-center border border-[#FED100]/30">
+                  <div className="text-center">
+                    <div className="font-playfair text-5xl font-bold text-[#FED100] mb-2">
+                      {settings.logoText || "TDG"}
+                    </div>
+                    <div className="text-gray-300 text-sm">
+                      Premium Canvas Prints
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      {['4x6"', '8x10"', '12x16"', '18x24"'].map((s) => (
+                        <div
+                          key={s}
+                          className="bg-[#FED100]/10 rounded text-xs text-center py-1 text-[#FED100] border border-[#FED100]/20"
+                        >
+                          {s}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="absolute -top-3 -right-3 bg-[#FED100] text-[#212121] text-xs font-bold px-3 py-1 rounded-full">
-                30% OFF
+                <div className="absolute -top-3 -right-3 bg-[#FED100] text-[#212121] text-xs font-bold px-3 py-1 rounded-full">
+                  30% OFF
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -257,7 +327,11 @@ export default function HomePage() {
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors capitalize ${
                 filter === f
                   ? "bg-[#FED100] text-[#212121] font-bold"
-                  : `${isDark ? "bg-[#2a2c2a] text-gray-300 border border-[#444]" : "bg-white text-[#333533] border border-[#D6D6D6]"} hover:border-[#FED100]`
+                  : `${
+                      isDark
+                        ? "bg-[#2a2c2a] text-gray-300 border border-[#444]"
+                        : "bg-white text-[#333533] border border-[#D6D6D6]"
+                    } hover:border-[#FED100]`
               }`}
             >
               {f === "all"
@@ -315,48 +389,49 @@ export default function HomePage() {
       <section className="bg-[#212121] text-white py-5">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-lg font-semibold">
-            &#9200; HURRY! Offer ends in&nbsp;
-            <span className="font-mono text-[#FED100] text-xl">
+            ⏰ Flash Sale ends in:{" "}
+            <span className="text-[#FED100] font-mono">
               {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
-            </span>
-            &nbsp;| Use Code:&nbsp;
-            <span className="font-mono text-[#FFEE32]">
-              {settings.popupCode}
             </span>
           </p>
         </div>
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="bg-[#212121] text-white py-16">
+      <section
+        id="how-it-works"
+        className={`${isDark ? "bg-[#1e1e1e]" : "bg-white"} py-16`}
+      >
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
             <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-2">
-              Simple Process
+              Process
             </p>
-            <h2 className="font-playfair text-3xl md:text-4xl font-bold">
+            <h2
+              className={`font-playfair text-3xl md:text-4xl font-bold ${text}`}
+            >
               How It Works
             </h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[
               {
-                icon: Palette,
+                icon: Package,
                 step: "01",
                 title: "Choose Size",
-                desc: "Select size and thickness from our catalog",
+                desc: "Select your canvas size and style",
               },
               {
-                icon: Package,
+                icon: Palette,
                 step: "02",
                 title: "Upload Photo",
-                desc: "Upload your photo or send via WhatsApp",
+                desc: "Send us your favorite photo",
               },
               {
                 icon: CheckCircle,
                 step: "03",
-                title: "Pay 30% Advance",
-                desc: "Secure your order with a small advance",
+                title: "We Print",
+                desc: "Premium printing with quality check",
               },
               {
                 icon: Truck,
@@ -382,7 +457,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Reviews */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
           <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-2">
@@ -395,36 +470,56 @@ export default function HomePage() {
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map((t) => (
-            <div
-              key={t.name}
-              className={`${isDark ? "bg-[#2a2c2a] border-[#444]" : "bg-white border-[#D6D6D6]"} rounded-xl p-6 shadow-sm border`}
-            >
-              <div className="flex gap-1 mb-3">
-                {Array.from({ length: t.rating }, (_, i) => i + 1).map((n) => (
-                  <span key={`star-${n}`} className="text-[#FED100]">
-                    &#9733;
-                  </span>
-                ))}
-              </div>
-              <p
-                className={`${isDark ? "text-gray-300" : "text-[#333533]"} text-sm leading-relaxed mb-4`}
+          {displayReviews.map((t, idx) => {
+            const reviewKey = `review-${t.name}-${idx}`;
+            return (
+              <div
+                key={reviewKey}
+                className={`${
+                  isDark
+                    ? "bg-[#2a2c2a] border-[#444]"
+                    : "bg-white border-[#D6D6D6]"
+                } rounded-xl p-6 shadow-sm border`}
               >
-                "{t.text}"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-[#FED100] rounded-full flex items-center justify-center text-[#212121] font-bold text-sm">
-                  {t.name[0]}
+                <div className="flex gap-1 mb-3">
+                  {Array.from({ length: t.rating }, (_, i) => i + 1).map(
+                    (n) => (
+                      <span key={`star-${n}`} className="text-[#FED100]">
+                        &#9733;
+                      </span>
+                    ),
+                  )}
                 </div>
-                <div>
-                  <div className={`font-semibold text-sm ${text}`}>
-                    {t.name}
+                <p
+                  className={`${
+                    isDark ? "text-gray-300" : "text-[#333533]"
+                  } text-sm leading-relaxed mb-4`}
+                >
+                  &ldquo;{t.text}&rdquo;
+                </p>
+                {t.image && (
+                  <img
+                    src={t.image}
+                    alt="Customer review"
+                    className="w-full rounded-lg mb-4 max-h-48 object-cover"
+                  />
+                )}
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-[#FED100] rounded-full flex items-center justify-center text-[#212121] font-bold text-sm">
+                    {t.name[0]}
                   </div>
-                  <div className="text-xs text-gray-500">{t.city}</div>
+                  <div>
+                    <div className={`font-semibold text-sm ${text}`}>
+                      {t.name}
+                    </div>
+                    {t.city && (
+                      <div className="text-xs text-gray-500">{t.city}</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

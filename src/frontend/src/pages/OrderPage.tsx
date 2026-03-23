@@ -3,7 +3,8 @@ import { CheckCircle, Copy, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { type Product, addOrder, getProducts, getSettings } from "../lib/data";
+import { useData } from "../lib/DataContext";
+import { type Product, addOrder } from "../lib/data";
 
 const STEPS = ["Size & Style", "Upload Photo", "Your Details", "Payment"];
 
@@ -24,7 +25,7 @@ export default function OrderPage() {
   const [showPayment, setShowPayment] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [copied, setCopied] = useState(false);
-  const settings = getSettings();
+  const { settings, products: allProducts, addOrderToStore } = useData();
   const pickupCities = settings.pickupCities || [
     "Basugaon",
     "Kokrajhar",
@@ -33,9 +34,9 @@ export default function OrderPage() {
   ];
 
   useEffect(() => {
-    const p = getProducts().find((x) => x.id === productId);
+    const p = allProducts.find((x) => x.id === productId);
     if (p) setProduct(p);
-  }, [productId]);
+  }, [productId, allProducts]);
 
   if (!product)
     return (
@@ -78,6 +79,7 @@ export default function OrderPage() {
       expectedDelivery: deliveryDate,
       notes: "",
     });
+    addOrderToStore(order);
     setOrderId(order.id);
     setStep(4);
   }
@@ -139,27 +141,34 @@ export default function OrderPage() {
                 Pay &#x20b9;{advance} advance to:
               </div>
               <div className="text-sm space-y-1">
-                <div>
-                  <span className="text-gray-500">UPI:</span>{" "}
-                  <span className="font-mono font-semibold text-[#b38b00]">
-                    {settings.upiId}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Account Name:</span>{" "}
-                  {settings.accountName}
-                </div>
-                <div>
-                  <span className="text-gray-500">Bank:</span>{" "}
-                  {settings.bankName}
-                </div>
-                <div>
-                  <span className="text-gray-500">A/C No:</span>{" "}
-                  {settings.accountNumber}
-                </div>
-                <div>
-                  <span className="text-gray-500">IFSC:</span> {settings.ifsc}
-                </div>
+                {settings.showUpiDetails !== false && (
+                  <div>
+                    <span className="text-gray-500">UPI:</span>{" "}
+                    <span className="font-mono font-semibold text-[#b38b00]">
+                      {settings.upiId}
+                    </span>
+                  </div>
+                )}
+                {settings.showBankDetails !== false && (
+                  <>
+                    <div>
+                      <span className="text-gray-500">Account Name:</span>{" "}
+                      {settings.accountName}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Bank:</span>{" "}
+                      {settings.bankName}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">A/C No:</span>{" "}
+                      {settings.accountNumber}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">IFSC:</span>{" "}
+                      {settings.ifsc}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             <p className="text-xs text-gray-500 mb-4">
@@ -450,25 +459,44 @@ export default function OrderPage() {
                     Pay &#x20b9;{advance} via:
                   </div>
                   <div className="space-y-1">
-                    <div>
-                      <span className="text-gray-500">UPI ID:</span>{" "}
-                      <span className="font-mono font-bold text-[#b38b00]">
-                        {settings.upiId}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Bank:</span>{" "}
-                      {settings.bankName}
-                    </div>
-                    <div>
-                      <span className="text-gray-500">A/C:</span>{" "}
-                      {settings.accountNumber}
-                    </div>
-                    <div>
-                      <span className="text-gray-500">IFSC:</span>{" "}
-                      {settings.ifsc}
-                    </div>
+                    {settings.showUpiDetails !== false && (
+                      <div>
+                        <span className="text-gray-500">UPI ID:</span>{" "}
+                        <span className="font-mono font-bold text-[#b38b00]">
+                          {settings.upiId}
+                        </span>
+                      </div>
+                    )}
+                    {settings.showBankDetails !== false && (
+                      <>
+                        <div>
+                          <span className="text-gray-500">Bank:</span>{" "}
+                          {settings.bankName}
+                        </div>
+                        <div>
+                          <span className="text-gray-500">A/C:</span>{" "}
+                          {settings.accountNumber}
+                        </div>
+                        <div>
+                          <span className="text-gray-500">IFSC:</span>{" "}
+                          {settings.ifsc}
+                        </div>
+                      </>
+                    )}
                   </div>
+                  {settings.qrCodeImage && (
+                    <div className="mt-4 text-center">
+                      <p className="text-xs text-gray-500 mb-2 font-medium">
+                        Scan QR to Pay
+                      </p>
+                      <img
+                        src={settings.qrCodeImage}
+                        alt="Payment QR Code"
+                        className="mx-auto rounded-lg border border-[#FED100]/40"
+                        style={{ maxWidth: 200 }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
               <p className="text-xs text-gray-500 text-center mb-4">

@@ -29,18 +29,26 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div
         className={`bg-gradient-to-br ${GRADIENTS[idx]} h-48 flex items-center justify-center relative overflow-hidden`}
       >
-        <div className="text-center">
-          <div className="font-playfair text-2xl font-bold text-[#333533]">
-            {product.size}
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className="text-center">
+            <div className="font-playfair text-2xl font-bold text-[#333533]">
+              {product.size}
+            </div>
+            <div className="text-[#333533] text-sm mt-1 opacity-70">
+              {product.category === "canvas"
+                ? "Canvas Print"
+                : product.category === "collage"
+                  ? "Collage"
+                  : "Special"}
+            </div>
           </div>
-          <div className="text-[#333533] text-sm mt-1 opacity-70">
-            {product.category === "canvas"
-              ? "Canvas Print"
-              : product.category === "collage"
-                ? "Collage"
-                : "Special"}
-          </div>
-        </div>
+        )}
         <div className="absolute top-2 left-2">
           <span className="bg-[#FFEE32] text-[#212121] text-xs px-2 py-0.5 rounded-full font-bold">
             {Math.round((save / product.mrp) * 100)}% OFF
