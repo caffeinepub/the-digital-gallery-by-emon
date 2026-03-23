@@ -10,7 +10,30 @@ export interface Product {
   stock: number;
   active: boolean;
   description: string;
-  image?: string; // base64 data URL
+  image?: string; // base64 data URL (legacy, first image)
+  images?: string[]; // up to 5 base64 data URLs
+}
+
+export interface CartItem {
+  productId: string;
+  productName: string;
+  size: string;
+  price: number;
+  mrp: number;
+  quantity: number;
+  image?: string;
+}
+
+export interface CustomerSession {
+  name: string;
+  phone: string;
+}
+
+export interface ShippingZone {
+  id: string;
+  name: string;
+  pincodePrefixes: string[]; // e.g. ["781", "782"]
+  charge: number;
 }
 
 export interface Order {
@@ -21,10 +44,13 @@ export interface Order {
   productName: string;
   size: string;
   thickness: string;
+  quantity: number;
   price: number;
   advanceAmount: number;
   advancePaid: boolean;
   deliveryCharge: number;
+  shippingZone?: string;
+  pincode?: string;
   pickupCity: string;
   photoRef: string;
   status:
@@ -36,6 +62,7 @@ export interface Order {
     | "cancelled";
   expectedDelivery: string;
   createdAt: string;
+  cancelledAt?: string;
   notes: string;
 }
 
@@ -100,10 +127,10 @@ export interface Settings {
   advancedBanners: Banner[];
   trackingEnabled: boolean;
   logoText: string;
-  logoImage?: string; // base64 data URL
-  qrCodeImage?: string; // base64 data URL
+  logoImage?: string;
+  qrCodeImage?: string;
   heroSlideshowEnabled?: boolean;
-  heroSlideshowInterval?: number; // ms, default 4000
+  heroSlideshowInterval?: number;
   heroSlideshow?: { id: string; image: string; caption?: string }[];
   theme: "light" | "dark";
   categories: string[];
@@ -114,188 +141,246 @@ export interface Settings {
   midPageAdText: string;
   midPageAdSubtext: string;
   midPageAdBg: string;
-  showBankDetails?: boolean; // default: true
-  showUpiDetails?: boolean; // default: true
+  showBankDetails?: boolean;
+  showUpiDetails?: boolean;
+  shippingZones?: ShippingZone[];
+  whatsappTemplate?: string;
+  aboutUs?: string;
 }
 
 const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "p1",
-    name: "Canvas Print",
+    name: 'Canvas Print 4x6"',
     category: "canvas",
     size: '4x6"',
-    mrp: 599,
-    price: 419,
+    mrp: 199,
+    price: 149,
     stock: 50,
     active: true,
-    description: "Premium canvas print 4x6 inches",
+    description: "Premium canvas print 4x6 inches | 1 Inch thick",
   },
   {
     id: "p2",
-    name: "Canvas Print",
+    name: 'Canvas Print 4x6" (1.5 Inch)',
     category: "canvas",
-    size: '5x7"',
-    mrp: 799,
-    price: 559,
+    size: '4x6"',
+    mrp: 249,
+    price: 179,
     stock: 50,
     active: true,
-    description: "Premium canvas print 5x7 inches",
+    description: "Premium canvas print 4x6 inches | 1.5 Inch thick",
   },
   {
     id: "p3",
-    name: "Canvas Print",
+    name: 'Canvas Print 5x7"',
     category: "canvas",
-    size: '8x10"',
-    mrp: 1199,
-    price: 839,
-    stock: 40,
+    size: '5x7"',
+    mrp: 299,
+    price: 199,
+    stock: 50,
     active: true,
-    description: "Premium canvas print 8x10 inches",
+    description: "Premium canvas print 5x7 inches | 1 Inch thick",
   },
   {
     id: "p4",
-    name: "Canvas Print",
+    name: 'Canvas Print 5x7" (1.5 Inch)',
     category: "canvas",
-    size: '10x12"',
-    mrp: 1499,
-    price: 1049,
-    stock: 40,
+    size: '5x7"',
+    mrp: 299,
+    price: 219,
+    stock: 50,
     active: true,
-    description: "Premium canvas print 10x12 inches",
+    description: "Premium canvas print 5x7 inches | 1.5 Inch thick",
   },
   {
     id: "p5",
-    name: "Canvas Print",
+    name: 'Canvas Print 6x8"',
     category: "canvas",
-    size: '12x16"',
-    mrp: 1999,
-    price: 1399,
-    stock: 30,
+    size: '6x8"',
+    mrp: 349,
+    price: 249,
+    stock: 40,
     active: true,
-    description: "Premium canvas print 12x16 inches",
+    description: "Premium canvas print 6x8 inches | 1 Inch thick",
   },
   {
     id: "p6",
-    name: "Canvas Print",
+    name: 'Canvas Print 6x8" (1.5 Inch)',
     category: "canvas",
-    size: '12x18"',
-    mrp: 2199,
-    price: 1539,
-    stock: 30,
+    size: '6x8"',
+    mrp: 399,
+    price: 279,
+    stock: 40,
     active: true,
-    description: "Premium canvas print 12x18 inches",
+    description: "Premium canvas print 6x8 inches | 1.5 Inch thick",
   },
   {
     id: "p7",
-    name: "Canvas Print",
+    name: "Canvas Print A4",
     category: "canvas",
-    size: '14x18"',
-    mrp: 2499,
-    price: 1749,
-    stock: 25,
+    size: "A4",
+    mrp: 399,
+    price: 299,
+    stock: 40,
     active: true,
-    description: "Premium canvas print 14x18 inches",
+    description: "Premium canvas print A4 size | 1 Inch thick",
   },
   {
     id: "p8",
-    name: "Canvas Print",
+    name: "Canvas Print A4 (1.5 Inch)",
     category: "canvas",
-    size: '16x20"',
-    mrp: 2999,
-    price: 2099,
-    stock: 25,
+    size: "A4",
+    mrp: 449,
+    price: 349,
+    stock: 40,
     active: true,
-    description: "Premium canvas print 16x20 inches",
+    description: "Premium canvas print A4 size | 1.5 Inch thick",
   },
   {
     id: "p9",
-    name: "Canvas Print",
-    category: "canvas",
-    size: '18x24"',
-    mrp: 3999,
-    price: 2799,
-    stock: 20,
+    name: "Canvas Print A4 Mount",
+    category: "mount",
+    size: "A4",
+    mrp: 649,
+    price: 499,
+    stock: 30,
     active: true,
-    description: "Premium canvas print 18x24 inches",
+    description: "Premium canvas print A4 with mount | 1 Inch thick",
   },
   {
     id: "p10",
-    name: "Collage (3-in-1)",
-    category: "collage",
-    size: '4x6"',
-    mrp: 899,
-    price: 629,
-    stock: 40,
+    name: "Canvas Print A4 Mount (1.5 Inch)",
+    category: "mount",
+    size: "A4",
+    mrp: 749,
+    price: 599,
+    stock: 30,
     active: true,
-    description: "Beautiful 3-photo collage",
+    description: "Premium canvas print A4 with mount | 1.5 Inch thick",
   },
   {
     id: "p11",
-    name: "Collage (4-in-1)",
-    category: "collage",
-    size: '6x8"',
-    mrp: 1299,
-    price: 909,
-    stock: 35,
+    name: 'Canvas Print 12x16"',
+    category: "canvas",
+    size: '12x16"',
+    mrp: 1199,
+    price: 899,
+    stock: 25,
     active: true,
-    description: "Beautiful 4-photo collage",
+    description: "Premium canvas print 12x16 inches | 1 Inch thick",
   },
   {
     id: "p12",
-    name: "Collage (6-in-1)",
-    category: "collage",
-    size: '8x10"',
-    mrp: 1799,
-    price: 1259,
-    stock: 30,
+    name: 'Canvas Print 12x16" (1.5 Inch)',
+    category: "canvas",
+    size: '12x16"',
+    mrp: 1399,
+    price: 1099,
+    stock: 25,
     active: true,
-    description: "Beautiful 6-photo collage",
+    description: "Premium canvas print 12x16 inches | 1.5 Inch thick",
   },
   {
     id: "p13",
-    name: "Collage (9-in-1)",
-    category: "collage",
-    size: '12x16"',
-    mrp: 2499,
-    price: 1749,
-    stock: 25,
+    name: 'Canvas Print 12x18"',
+    category: "canvas",
+    size: '12x18"',
+    mrp: 1499,
+    price: 1199,
+    stock: 20,
     active: true,
-    description: "Beautiful 9-photo collage",
+    description: "Premium canvas print 12x18 inches | 1 Inch thick",
   },
   {
     id: "p14",
-    name: "Custom Name Board",
-    category: "special",
+    name: 'Canvas Print 12x18" (1.5 Inch)',
+    category: "canvas",
     size: '12x18"',
-    mrp: 1599,
-    price: 1119,
+    mrp: 1699,
+    price: 1299,
     stock: 20,
     active: true,
-    description: "Personalized name board with photo",
+    description: "Premium canvas print 12x18 inches | 1.5 Inch thick",
   },
   {
     id: "p15",
-    name: "Wedding Special",
-    category: "special",
+    name: 'Canvas Print 12x18" Mount',
+    category: "mount",
+    size: '12x18"',
+    mrp: 1799,
+    price: 1399,
+    stock: 20,
+    active: true,
+    description: "Premium canvas print 12x18 with mount | 1 Inch thick",
+  },
+  {
+    id: "p16",
+    name: 'Canvas Print 12x18" Mount (1.5 Inch)',
+    category: "mount",
+    size: '12x18"',
+    mrp: 1999,
+    price: 1599,
+    stock: 20,
+    active: true,
+    description: "Premium canvas print 12x18 with mount | 1.5 Inch thick",
+  },
+  {
+    id: "p17",
+    name: 'Canvas Print 18x24"',
+    category: "canvas",
     size: '18x24"',
-    mrp: 4999,
-    price: 3499,
+    mrp: 2399,
+    price: 1899,
     stock: 15,
     active: true,
-    description: "Premium wedding canvas print",
+    description: "Premium canvas print 18x24 inches | 1 Inch thick",
+  },
+  {
+    id: "p18",
+    name: 'Canvas Print 18x24" (1.5 Inch)',
+    category: "canvas",
+    size: '18x24"',
+    mrp: 2799,
+    price: 2199,
+    stock: 15,
+    active: true,
+    description: "Premium canvas print 18x24 inches | 1.5 Inch thick",
+  },
+  {
+    id: "p19",
+    name: 'Canvas Print 18x24" Mount',
+    category: "mount",
+    size: '18x24"',
+    mrp: 2899,
+    price: 2299,
+    stock: 15,
+    active: true,
+    description: "Premium canvas print 18x24 with mount | 1 Inch thick",
+  },
+  {
+    id: "p20",
+    name: 'Canvas Print 18x24" Mount (1.5 Inch)',
+    category: "mount",
+    size: '18x24"',
+    mrp: 3299,
+    price: 2599,
+    stock: 15,
+    active: true,
+    description: "Premium canvas print 18x24 with mount | 1.5 Inch thick",
   },
 ];
 
 const DEFAULT_SETTINGS: Settings = {
   storeName: "The Digital Gallery by Emon",
   adminPassword: "Emon2026",
-  whatsapp: "9999999999",
+  whatsapp: "9365246096",
   upiId: "digitalgallery@upi",
   bankName: "State Bank of India",
   accountNumber: "XXXXXXXXXXXX",
   ifsc: "SBIN0000000",
   accountName: "The Digital Gallery by Emon",
-  popupEnabled: true,
+  popupEnabled: false,
   popupText: "30% OFF ON ALL COLLAGES",
   popupSubtext: "Limited time offer. Grab it now!",
   popupCode: "TDGSALE25",
@@ -340,7 +425,7 @@ const DEFAULT_SETTINGS: Settings = {
   heroSlideshowInterval: 4000,
   heroSlideshow: [],
   theme: "light",
-  categories: ["canvas", "collage", "special"],
+  categories: ["canvas", "mount"],
   pickupCities: ["Basugaon", "Kokrajhar", "Bongaigaon", "Barpeta Road"],
   announcementBar:
     "Free Shipping on orders above ₹999 | Use code TDGSALE25 for 30% OFF",
@@ -351,9 +436,47 @@ const DEFAULT_SETTINGS: Settings = {
   midPageAdBg: "#FED100",
   showBankDetails: true,
   showUpiDetails: true,
+  shippingZones: [
+    {
+      id: "z1",
+      name: "Local (Assam)",
+      pincodePrefixes: ["781", "783", "784", "785", "786"],
+      charge: 50,
+    },
+    {
+      id: "z2",
+      name: "North East India",
+      pincodePrefixes: [
+        "787",
+        "788",
+        "790",
+        "791",
+        "792",
+        "793",
+        "794",
+        "795",
+        "796",
+        "797",
+        "798",
+        "799",
+      ],
+      charge: 80,
+    },
+    { id: "z3", name: "Rest of India", pincodePrefixes: [], charge: 120 },
+  ],
+  whatsappTemplate:
+    "Namaste [Customer Name]! 🙏\nYour order with The Digital Gallery is CONFIRMED! ✅\n📦 Item: [Product Name] | 🔢 Qty: [Quantity]\n💰 Total: ₹[Net] | 💵 Advance: ₹[Advance] | 💳 Balance: ₹[Balance]\n📍 Action Required: To coordinate pickup, please share your Live Location in this chat once ready.\nLeave a Photo Review on our site for a special discount! 📸⭐️\n— The Digital Gallery by Emon",
+  aboutUs:
+    "The Digital Gallery by Emon is a premium canvas print studio based in Assam. We turn your cherished memories into beautiful wall art. Every print is crafted with care and delivered to your doorstep in 3-4 working days.",
 };
 
 export function getProducts(): Product[] {
+  const version = localStorage.getItem("tdg_products_version");
+  if (version !== "v3") {
+    localStorage.setItem("tdg_products", JSON.stringify(DEFAULT_PRODUCTS));
+    localStorage.setItem("tdg_products_version", "v3");
+    return DEFAULT_PRODUCTS;
+  }
   const raw = localStorage.getItem("tdg_products");
   if (raw) return JSON.parse(raw);
   localStorage.setItem("tdg_products", JSON.stringify(DEFAULT_PRODUCTS));
@@ -424,6 +547,34 @@ export function saveReviews(reviews: Review[]) {
   localStorage.setItem("tdg_reviews", JSON.stringify(reviews));
 }
 
+// Cart helpers
+export function getCart(): CartItem[] {
+  const raw = localStorage.getItem("tdg_cart");
+  return raw ? JSON.parse(raw) : [];
+}
+
+export function saveCart(items: CartItem[]) {
+  localStorage.setItem("tdg_cart", JSON.stringify(items));
+}
+
+export function clearCart() {
+  localStorage.removeItem("tdg_cart");
+}
+
+// Customer session
+export function getCustomerSession(): CustomerSession | null {
+  const raw = localStorage.getItem("tdg_customer");
+  return raw ? JSON.parse(raw) : null;
+}
+
+export function saveCustomerSession(session: CustomerSession) {
+  localStorage.setItem("tdg_customer", JSON.stringify(session));
+}
+
+export function clearCustomerSession() {
+  localStorage.removeItem("tdg_customer");
+}
+
 export function backupData() {
   const data = {
     products: getProducts(),
@@ -460,3 +611,46 @@ export const PICKUP_CITIES = [
   "Bongaigaon",
   "Barpeta Road",
 ];
+
+export function getShippingCharge(
+  pincode: string,
+  zones: ShippingZone[],
+): { zone: ShippingZone | null; charge: number } {
+  const prefix6 = pincode.slice(0, 6);
+  const prefix3 = pincode.slice(0, 3);
+  // Try to find a matching zone by prefix
+  for (const zone of zones) {
+    if (zone.pincodePrefixes.length === 0) continue;
+    if (
+      zone.pincodePrefixes.some(
+        (p) => prefix6.startsWith(p) || prefix3.startsWith(p),
+      )
+    ) {
+      return { zone, charge: zone.charge };
+    }
+  }
+  // Fallback: last zone (usually "Rest of India") or first
+  const fallback =
+    zones.find((z) => z.pincodePrefixes.length === 0) ||
+    zones[zones.length - 1];
+  return { zone: fallback || null, charge: fallback?.charge ?? 0 };
+}
+
+export function canCancelOrder(order: Order): boolean {
+  if (order.status === "cancelled" || order.status === "delivered")
+    return false;
+  const created = new Date(order.createdAt).getTime();
+  const now = Date.now();
+  return now - created < 60 * 60 * 1000; // 60 minutes
+}
+
+export function getOrderDisplayStatus(order: Order): string {
+  if (order.status === "cancelled") return "Cancelled";
+  if (order.status === "delivered") return "Delivered";
+  const created = new Date(order.createdAt).getTime();
+  const now = Date.now();
+  if (now - created >= 60 * 60 * 1000 && order.status === "pending") {
+    return "Artist is Designing";
+  }
+  return STATUS_LABELS[order.status] || order.status;
+}

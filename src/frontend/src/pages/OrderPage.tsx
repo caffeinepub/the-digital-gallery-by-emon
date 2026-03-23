@@ -69,6 +69,7 @@ export default function OrderPage() {
       productName: `${product!.name} ${product!.size}`,
       size: product!.size,
       thickness,
+      quantity: 1,
       price,
       advanceAmount: advance,
       advancePaid: false,

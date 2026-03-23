@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
+  MessageCircle,
   MessageSquare,
   Minus,
   Package,
@@ -224,6 +225,7 @@ export default function AdminPage() {
           {tab === "orders" && (
             <OrdersTab
               orders={orders}
+              settings={settings}
               onSave={(u) => {
                 setOrders(u);
               }}
@@ -363,8 +365,9 @@ function DashboardTab({
 
 function OrdersTab({
   orders,
+  settings,
   onSave,
-}: { orders: Order[]; onSave: (o: Order[]) => void }) {
+}: { orders: Order[]; settings: SettingsType; onSave: (o: Order[]) => void }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
@@ -517,6 +520,35 @@ function OrdersTab({
                 />
               </div>
             )}
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  const s = settings;
+                  const tmpl = (
+                    s?.whatsappTemplate ||
+                    "Namaste [Customer Name]!\nOrder [Product Name] x[Quantity] confirmed.\nTotal: \u20b9[Net] | Advance: \u20b9[Advance] | Balance: \u20b9[Balance]"
+                  )
+                    .replace("[Customer Name]", order.customerName)
+                    .replace("[Product Name]", order.productName)
+                    .replace("[Quantity]", String(order.quantity || 1))
+                    .replace("[Net]", String(order.price))
+                    .replace("[Advance]", String(order.advanceAmount))
+                    .replace(
+                      "[Balance]",
+                      String(order.price - order.advanceAmount),
+                    );
+                  window.open(
+                    `https://wa.me/91${order.phone}?text=${encodeURIComponent(tmpl)}`,
+                    "_blank",
+                  );
+                }}
+                className="flex items-center gap-1.5 text-xs bg-green-50 border border-green-200 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors"
+                data-ocid={"orders.whatsapp.button"}
+              >
+                <MessageCircle size={13} /> Send WhatsApp
+              </button>
+            </div>
           </div>
         ))}
         {filtered.length === 0 && (
@@ -641,6 +673,7 @@ function ProductsTab({
     stock: 50,
     active: true,
     description: "",
+    images: [],
   };
 
   function startEdit(p: Product) {
@@ -668,6 +701,8 @@ function ProductsTab({
         stock: form.stock || 50,
         active: form.active !== false,
         description: form.description || "",
+        image: form.images?.[0] || form.image,
+        images: form.images || (form.image ? [form.image] : []),
       };
       onSave([...products, newP]);
     } else if (editId) {
@@ -849,49 +884,76 @@ function ProductsTab({
               </label>
             </div>
             <div className="col-span-2 md:col-span-3">
-              <div className="text-xs text-gray-500 block mb-1">
-                Product Image (JPG/PNG)
+              <div className="text-xs text-gray-500 block mb-2">
+                Product Images (up to 5 slots, JPG/PNG, max 500KB each)
               </div>
-              <div className="flex items-center gap-3">
-                <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors">
-                  <Upload size={14} />
-                  Upload Image
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      if (file.size > 600000) {
-                        alert(
-                          "Image is too large (max 500KB). Please compress it first.",
-                        );
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onload = () =>
-                        setForm({ ...form, image: reader.result as string });
-                      reader.readAsDataURL(file);
-                    }}
-                  />
-                </label>
-                {form.image && (
-                  <>
-                    <img
-                      src={form.image}
-                      alt="Product"
-                      className="h-16 w-16 object-cover rounded border border-gray-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, image: undefined })}
-                      className="text-red-400 hover:text-red-600 text-xs"
+              <div className="flex flex-wrap gap-3">
+                {[0, 1, 2, 3, 4].map((slotIdx) => {
+                  const imgs = form.images || [];
+                  const slotImg = imgs[slotIdx];
+                  return (
+                    <div
+                      key={slotIdx}
+                      className="flex flex-col items-center gap-1"
                     >
-                      Remove
-                    </button>
-                  </>
-                )}
+                      {slotImg ? (
+                        <div className="relative">
+                          <img
+                            src={slotImg}
+                            alt={`Slot ${slotIdx + 1}`}
+                            className="w-16 h-16 object-cover rounded border border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newImgs = [...(form.images || [])];
+                              newImgs.splice(slotIdx, 1);
+                              setForm({
+                                ...form,
+                                images: newImgs,
+                                image: newImgs[0],
+                              });
+                            }}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center"
+                          >
+                            <X size={8} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer w-16 h-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center hover:border-[#FED100] transition-colors">
+                          <Upload size={14} className="text-gray-400" />
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 600000) {
+                                alert("Image too large (max 500KB).");
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                const newImgs = [...(form.images || [])];
+                                newImgs[slotIdx] = reader.result as string;
+                                setForm({
+                                  ...form,
+                                  images: newImgs,
+                                  image: newImgs[0],
+                                });
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </label>
+                      )}
+                      <span className="text-xs text-gray-400">
+                        {slotIdx === 0 ? "Main" : `#${slotIdx + 1}`}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -2048,6 +2110,142 @@ function SettingsTab({
           onChange={(e) => setForm({ ...form, adminPassword: e.target.value })}
           className="w-full border rounded px-3 py-2 text-sm focus:outline-none max-w-xs"
         />
+      </div>
+
+      {/* About Us */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-3">About Us (Homepage)</h3>
+        <textarea
+          value={form.aboutUs || ""}
+          onChange={(e) => setForm({ ...form, aboutUs: e.target.value })}
+          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+          rows={4}
+          placeholder="Write about your store..."
+        />
+      </div>
+
+      {/* WhatsApp Template */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-1">
+          WhatsApp Order Confirmation Template
+        </h3>
+        <p className="text-xs text-gray-400 mb-3">
+          Variables: [Customer Name], [Product Name], [Quantity], [Net],
+          [Advance], [Balance]
+        </p>
+        <textarea
+          value={form.whatsappTemplate || ""}
+          onChange={(e) =>
+            setForm({ ...form, whatsappTemplate: e.target.value })
+          }
+          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none font-mono"
+          rows={7}
+        />
+      </div>
+
+      {/* Shipping Zones */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold">Shipping Zones & Rates</h3>
+          <button
+            type="button"
+            onClick={() => {
+              const newZone = {
+                id: `z${Date.now()}`,
+                name: "New Zone",
+                pincodePrefixes: [],
+                charge: 100,
+              };
+              setForm({
+                ...form,
+                shippingZones: [...(form.shippingZones || []), newZone],
+              });
+            }}
+            className="flex items-center gap-1 bg-[#FED100] text-[#212121] px-3 py-1.5 rounded text-xs font-bold hover:bg-[#e6bc00]"
+          >
+            <Plus size={14} /> Add Zone
+          </button>
+        </div>
+        <div className="space-y-3">
+          {(form.shippingZones || []).map((zone, zi) => (
+            <div
+              key={zone.id}
+              className="border rounded-lg p-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-end"
+            >
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Zone Name</div>
+                <input
+                  value={zone.name}
+                  onChange={(e) => {
+                    const zones = [...(form.shippingZones || [])];
+                    zones[zi] = { ...zone, name: e.target.value };
+                    setForm({ ...form, shippingZones: zones });
+                  }}
+                  className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none"
+                  placeholder="e.g. Local Assam"
+                />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Pincode Prefixes (comma-separated)
+                </div>
+                <input
+                  value={zone.pincodePrefixes.join(", ")}
+                  onChange={(e) => {
+                    const zones = [...(form.shippingZones || [])];
+                    zones[zi] = {
+                      ...zone,
+                      pincodePrefixes: e.target.value
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    };
+                    setForm({ ...form, shippingZones: zones });
+                  }}
+                  className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none"
+                  placeholder="e.g. 781, 782, 783"
+                />
+              </div>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <div className="text-xs text-gray-500 mb-1">Charge (₹)</div>
+                  <input
+                    type="number"
+                    value={zone.charge}
+                    onChange={(e) => {
+                      const zones = [...(form.shippingZones || [])];
+                      zones[zi] = { ...zone, charge: Number(e.target.value) };
+                      setForm({ ...form, shippingZones: zones });
+                    }}
+                    className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      shippingZones: (form.shippingZones || []).filter(
+                        (_, i) => i !== zi,
+                      ),
+                    })
+                  }
+                  className="p-2 text-red-400 hover:text-red-600"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+          {(!form.shippingZones || form.shippingZones.length === 0) && (
+            <p className="text-xs text-gray-400">
+              No zones defined. Add a zone above.
+            </p>
+          )}
+        </div>
+        <p className="text-xs text-gray-400 mt-2">
+          Leave pincode prefixes empty for a "catch-all" fallback zone.
+        </p>
       </div>
 
       <button

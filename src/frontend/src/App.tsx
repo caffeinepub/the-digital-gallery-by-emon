@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import {
   RouterProvider,
   createRootRoute,
@@ -6,8 +7,12 @@ import {
 } from "@tanstack/react-router";
 import { DataProvider } from "./lib/DataContext";
 import AdminPage from "./pages/AdminPage";
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
 import HomePage from "./pages/HomePage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 import OrderPage from "./pages/OrderPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import TrackPage from "./pages/TrackPage";
 
 const rootRoute = createRootRoute();
@@ -32,12 +37,36 @@ const adminRoute = createRoute({
   path: "/admin",
   component: AdminPage,
 });
+const cartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/cart",
+  component: CartPage,
+});
+const checkoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/checkout",
+  component: CheckoutPage,
+});
+const myOrdersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/my-orders",
+  component: MyOrdersPage,
+});
+const productDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/product/$productId",
+  component: ProductDetailPage,
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,
   trackRoute,
   orderRoute,
   adminRoute,
+  cartRoute,
+  checkoutRoute,
+  myOrdersRoute,
+  productDetailRoute,
 ]);
 const router = createRouter({ routeTree });
 
@@ -51,6 +80,7 @@ export default function App() {
   return (
     <DataProvider>
       <RouterProvider router={router} />
+      <Toaster richColors position="top-center" />
     </DataProvider>
   );
 }

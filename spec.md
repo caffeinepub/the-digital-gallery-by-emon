@@ -1,56 +1,53 @@
 # The Digital Gallery by Emon
 
 ## Current State
-- Full-stack e-commerce app with React frontend and localStorage persistence
-- Admin panel at /admin (password: Emon2026) with tabs for Orders, Products, Inventory, Finance, Suppliers, Settings
-- Settings supports logo text, banners, UPI/bank info, themes, categories, pickup cities
-- Customer homepage has static hero section, hardcoded reviews, product grid
-- No image upload capability for logo, QR code, product images, or reviews
-- No header slideshow functionality
+- React + Tailwind + localStorage frontend
+- HomePage with hero slideshow, products grid, reviews
+- OrderPage: 4-step flow (size → photo → details → summary+payment)
+- AdminPage: full CMS (products, orders, settings, reviews, finance, suppliers)
+- Navbar: no cart, no customer login
+- TrackPage: order lookup by ID or phone
+- DataContext: shared state for products, orders, settings, reviews
+- No cart, no customer login, no quantity selector, no shipping zones, no 60-min cancel, no trust badges, no live order count, no WhatsApp alert on new order, no product image slideshow
 
 ## Requested Changes (Diff)
 
 ### Add
-- `logoImage` field to Settings (base64 data URL) - admin can upload store logo JPG/PNG
-- `qrCodeImage` field to Settings (base64) - admin uploads payment QR code image
-- `heroSlideshow` field to Settings: array of base64 images + optional caption, with interval setting (ms)
-- `reviews` stored in localStorage as separate key: array of { id, name, rating, text, image (optional base64), date, active }
-- `image` field to Product interface (optional base64)
-- New admin Settings subsection: "Logo & Branding" - upload logo image (replaces logoText on navbar)
-- New admin Settings subsection: "Payment QR Code" - upload QR code image (shown in payment popup)
-- New admin Settings subsection: "Header Slideshow" - upload multiple images, set slide interval, reorder/delete slides, toggle on/off
-- New admin tab or Settings subsection: "Reviews Manager" - add new review (name, rating, text, photo/SMS screenshot upload), edit existing reviews, toggle active/inactive, delete
-- Product add/edit form: add image upload field for product images
-- Customer homepage: if heroSlideshow enabled and has images, show auto-rotating slideshow in header background with fade/slide transition
-- Customer homepage: if logoImage set, show it in navbar instead of logoText
-- Customer homepage: reviews section now loads from localStorage reviews data (dynamic)
-- Payment popup: if qrCodeImage set, show it alongside UPI/bank details
-- Product cards: if product has image, show it
+- **Customer Login**: Simple modal login with name + phone (localStorage session). Accessible from Navbar. Persists across page reloads.
+- **Cart System**: Add-to-cart from ProductCard and product detail. Cart icon in Navbar shows count. Dedicated CartPage with quantity controls, remove items, proceed to checkout.
+- **Quantity Selector**: On product order page (step 0), allow Qty 1–10.
+- **My Orders Hub**: `/my-orders` route. Shows customer's orders (by phone). View status, cancel (within 60 min), request refund.
+- **60-Minute Cancel Grace Period**: On order placement, store `createdAt`. Cancel button active for 60 min only. After 60 min, status auto-label becomes "Artist is Designing", cancel disabled.
+- **Multi-step Checkout**: Cart → Address (name, phone, pincode) → Shipping (auto-calculated from admin-defined zone rates) → Payment modal (UPI QR, deep-links to PhonePe/GPay, success chime + haptic).
+- **Trust Badge Strip**: Near payment button: "Verified Artist | Secure UPI | Quality Checked".
+- **Live Order Count**: On HomePage hero: "X orders placed in [City] today" (uses real order count from localStorage).
+- **WhatsApp Deep-Link Alert**: On order placement, auto-trigger WhatsApp deep-link pre-filled with full order details to admin's number (from settings.whatsapp). Opens in new tab.
+- **Product Image Slideshow**: Each product can have up to 5 images. Product detail/order page shows image slideshow with zoom/preview modal. Admin product form has 5 image upload slots.
+- **Shipping Zones in Admin**: Admin > Settings > Locations & Shipping. Admin defines zones: zone name, pincode prefix(es), shipping charge. Checkout calculates shipping by matching customer pincode.
+- **WhatsApp Order Confirm Template in Admin**: Admin > Orders > per-order "Send WhatsApp Confirm" button with pre-filled template.
+- **Admin Shipping Rates**: Admin can define zone name + pincode prefixes + charge.
 
 ### Modify
-- `data.ts`: Add `logoImage?`, `qrCodeImage?`, `heroSlideshow?` to Settings interface; add `heroSlideshowEnabled`, `heroSlideshowInterval`; add `reviews` localStorage helpers; add `image?` to Product
-- AdminPage Settings tab: add image upload sections with file input + preview + clear button
-- AdminPage: add Reviews management section (could be a new tab or within Settings)
-- HomePage hero section: detect slideshow data and render auto-advancing background
-- Navbar: show logoImage if available, else fall back to logoText
-- Payment popup in OrderPage: show qrCodeImage if set
+- **Navbar**: Add cart icon (with count), My Orders link (visible when logged in), Login/Logout button.
+- **ProductCard**: "Add to Cart" button instead of direct order link. Click product to see detail with slideshow.
+- **OrderPage**: Now the "order" flow starts from cart. Existing OrderPage repurposed as product detail + add-to-cart page with image slideshow, qty selector, reviews section.
+- **data.ts**: Add `CartItem` type, `ShippingZone` type; update `Order` with `quantity`, `cancelledAt?`, `shippingZone`; update `Product` with `images?: string[]`; update `Settings` with `shippingZones`; add cart helpers.
+- **App.tsx**: Add routes for `/cart`, `/checkout`, `/my-orders`, `/product/$productId`.
+- **AdminPage**: Add shipping zones editor in Settings tab; add 5-image slots to product form; add per-order WhatsApp confirm button.
 
 ### Remove
-- Nothing removed; all existing features preserved
+- Nothing to remove (TrackPage can remain as fallback).
 
 ## Implementation Plan
-1. Update `data.ts`: extend Settings interface with logoImage, qrCodeImage, heroSlideshow fields; add Review interface and localStorage helpers; add image field to Product
-2. Update `DataContext.tsx`: expose reviews state and helpers
-3. Update `AdminPage.tsx`:
-   a. Settings tab: add "Logo & Branding" card with image upload/preview/clear
-   b. Settings tab: add "Payment QR Code" card with image upload/preview/clear
-   c. Settings tab: add "Header Slideshow" card: multi-image upload, slide list with delete/reorder, interval selector, enable toggle
-   d. Add "Reviews" tab: table of reviews with add/edit modal (name, rating, text, image upload for photo/SMS screenshot), toggle active, delete
-   e. Products add/edit modal: add image upload field
-4. Update `HomePage.tsx`:
-   a. Hero section: if heroSlideshowEnabled, animate through slideshow images as background
-   b. Navbar logo: show img if logoImage else logoText
-   c. Reviews section: load from dynamic reviews data
-   d. Product images on product cards
-5. Update `OrderPage.tsx`: payment popup shows qrCodeImage if set
-6. Update `Navbar.tsx`: logoImage support
+1. Update `data.ts`: Add CartItem, ShippingZone types; extend Order (quantity, cancelledAt, shippingZone, pincode); extend Product (images array); extend Settings (shippingZones); add cart CRUD helpers; add customerSession helpers.
+2. Update `DataContext.tsx`: Expose cart state, customerSession state, setCart, setCustomerSession.
+3. Update `App.tsx`: Add routes `/cart`, `/checkout`, `/my-orders`, `/product/$productId`.
+4. Update `Navbar.tsx`: Cart icon with badge, My Orders link, Login/Logout.
+5. Create `CustomerLoginModal.tsx`: Name + phone form, stores to localStorage.
+6. Update `ProductCard.tsx`: Add to Cart button, link to `/product/$productId`.
+7. Create `ProductDetailPage.tsx`: Image slideshow (up to 5 images) with zoom modal, qty selector, reviews section, add-to-cart button.
+8. Create `CartPage.tsx`: List cart items, qty controls, remove, subtotal, proceed to checkout.
+9. Create `CheckoutPage.tsx`: Step 1 address (name/phone/pincode), Step 2 shipping display, Step 3 payment modal with UPI QR + PhonePe/GPay deep-links + success chime + haptic + WhatsApp alert to admin + trust badges.
+10. Create `MyOrdersPage.tsx`: Customer login gate. List orders by phone. Show status, 60-min cancel, refund request.
+11. Update `AdminPage.tsx`: Add shipping zones editor; add 5-image slots in product form; add WhatsApp confirm button per order.
+12. Update `HomePage.tsx`: Live order count in hero section.

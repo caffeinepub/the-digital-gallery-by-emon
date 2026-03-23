@@ -7,7 +7,6 @@ import {
   Truck,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import EntrancePopup from "../components/EntrancePopup";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
@@ -38,7 +37,11 @@ const FALLBACK_TESTIMONIALS = [
 ];
 
 export default function HomePage() {
-  const { products: allProducts, settings, reviews } = useData();
+  const { products: allProducts, settings, reviews, orders } = useData();
+  const today = new Date().toDateString();
+  const todayOrderCount = orders.filter(
+    (o) => new Date(o.createdAt).toDateString() === today,
+  ).length;
   const [filter, setFilter] = useState("all");
   const [bannerIdx, setBannerIdx] = useState(0);
   const [slideIdx, setSlideIdx] = useState(0);
@@ -69,11 +72,8 @@ export default function HomePage() {
   const slideshowActive = settings.heroSlideshowEnabled && slides.length > 0;
   const slideInterval = settings.heroSlideshowInterval || 4000;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cleanup only effect
   useEffect(() => {
-    if (!slideshowActive) return;
-    slideRef.current = setInterval(() => {
-      setSlideIdx((i) => (i + 1) % slides.length);
-    }, slideInterval);
     return () => {
       if (slideRef.current) clearInterval(slideRef.current);
     };
@@ -135,7 +135,6 @@ export default function HomePage() {
 
   return (
     <div className={`min-h-screen ${bg} font-inter`}>
-      <EntrancePopup />
       <Navbar />
 
       {/* Ticker banner */}
@@ -239,36 +238,16 @@ export default function HomePage() {
                 How It Works
               </button>
             </div>
-          </div>
-          {!slideshowActive && (
-            <div className="flex-1 flex justify-center">
-              <div className="relative">
-                <div className="w-64 h-64 md:w-80 md:h-80 bg-gradient-to-br from-[#FED100]/20 to-[#FFEE32]/10 rounded-2xl flex items-center justify-center border border-[#FED100]/30">
-                  <div className="text-center">
-                    <div className="font-playfair text-5xl font-bold text-[#FED100] mb-2">
-                      {settings.logoText || "TDG"}
-                    </div>
-                    <div className="text-gray-300 text-sm">
-                      Premium Canvas Prints
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      {['4x6"', '8x10"', '12x16"', '18x24"'].map((s) => (
-                        <div
-                          key={s}
-                          className="bg-[#FED100]/10 rounded text-xs text-center py-1 text-[#FED100] border border-[#FED100]/20"
-                        >
-                          {s}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute -top-3 -right-3 bg-[#FED100] text-[#212121] text-xs font-bold px-3 py-1 rounded-full">
-                  30% OFF
-                </div>
+            {todayOrderCount > 0 && (
+              <div className="mt-5 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
+                <span className="text-sm text-white/80">
+                  <strong className="text-[#FED100]">{todayOrderCount}</strong>{" "}
+                  orders placed today
+                </span>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </section>
 

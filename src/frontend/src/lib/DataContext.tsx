@@ -7,18 +7,26 @@ import {
   useState,
 } from "react";
 import {
+  type CartItem,
+  type CustomerSession,
   type FinanceRecord,
   type Order,
   type Product,
   type Review,
   type Settings,
   type Supplier,
+  clearCart,
+  clearCustomerSession,
+  getCart,
+  getCustomerSession,
   getFinance,
   getOrders,
   getProducts,
   getReviews,
   getSettings,
   getSuppliers,
+  saveCart,
+  saveCustomerSession,
   saveFinance,
   saveOrders,
   saveProducts,
@@ -34,12 +42,16 @@ interface DataContextType {
   suppliers: Supplier[];
   settings: Settings;
   reviews: Review[];
+  cart: CartItem[];
+  customerSession: CustomerSession | null;
   setProducts: (p: Product[]) => void;
   setOrders: (o: Order[]) => void;
   setFinance: (f: FinanceRecord[]) => void;
   setSuppliers: (s: Supplier[]) => void;
   setSettings: (s: Settings) => void;
   setReviews: (r: Review[]) => void;
+  setCart: (items: CartItem[]) => void;
+  setCustomerSession: (session: CustomerSession | null) => void;
   addOrderToStore: (order: Order) => void;
   refresh: () => void;
 }
@@ -57,8 +69,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
   const [settings, setSettingsState] = useState<Settings>(() => getSettings());
   const [reviews, setReviewsState] = useState<Review[]>(() => getReviews());
+  const [cart, setCartState] = useState<CartItem[]>(() => getCart());
+  const [customerSession, setCustomerSessionState] =
+    useState<CustomerSession | null>(() => getCustomerSession());
 
-  // Listen for localStorage changes from other tabs
   useEffect(() => {
     function onStorage(e: StorageEvent) {
       if (e.key === "tdg_products") setProductsState(getProducts());
@@ -67,6 +81,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (e.key === "tdg_suppliers") setSuppliersState(getSuppliers());
       if (e.key === "tdg_settings") setSettingsState(getSettings());
       if (e.key === "tdg_reviews") setReviewsState(getReviews());
+      if (e.key === "tdg_cart") setCartState(getCart());
+      if (e.key === "tdg_customer")
+        setCustomerSessionState(getCustomerSession());
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -102,6 +119,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setReviewsState(r);
   }, []);
 
+  const setCart = useCallback((items: CartItem[]) => {
+    if (items.length === 0) {
+      clearCart();
+    } else {
+      saveCart(items);
+    }
+    setCartState(items);
+  }, []);
+
+  const setCustomerSession = useCallback((session: CustomerSession | null) => {
+    if (session) {
+      saveCustomerSession(session);
+    } else {
+      clearCustomerSession();
+    }
+    setCustomerSessionState(session);
+  }, []);
+
   const addOrderToStore = useCallback((order: Order) => {
     setOrdersState((prev) => {
       const updated = [...prev, order];
@@ -117,6 +152,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setSuppliersState(getSuppliers());
     setSettingsState(getSettings());
     setReviewsState(getReviews());
+    setCartState(getCart());
+    setCustomerSessionState(getCustomerSession());
   }, []);
 
   return (
@@ -128,12 +165,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         suppliers,
         settings,
         reviews,
+        cart,
+        customerSession,
         setProducts,
         setOrders,
         setFinance,
         setSuppliers,
         setSettings,
         setReviews,
+        setCart,
+        setCustomerSession,
         addOrderToStore,
         refresh,
       }}
