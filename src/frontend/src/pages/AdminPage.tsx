@@ -43,7 +43,8 @@ type Tab =
   | "finance"
   | "suppliers"
   | "reviews"
-  | "settings";
+  | "settings"
+  | "about_me";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -127,6 +128,7 @@ export default function AdminPage() {
     { key: "suppliers", label: "Suppliers", icon: Users },
     { key: "reviews", label: "Reviews", icon: MessageSquare },
     { key: "settings", label: "Settings", icon: Settings },
+    { key: "about_me", label: "About Me", icon: Users },
   ] as const;
 
   return (
@@ -278,6 +280,14 @@ export default function AdminPage() {
               }}
             />
           )}
+          {tab === "about_me" && (
+            <AboutMeTab
+              settings={settings}
+              onSave={(u) => {
+                setSettings(u);
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -375,6 +385,18 @@ function OrdersTab({
     onSave(orders.map((o) => (o.id === id ? { ...o, ...changes } : o)));
   }
 
+  function deleteOrder(id: string) {
+    if (window.confirm("Delete this order? This cannot be undone.")) {
+      onSave(orders.filter((o) => o.id !== id));
+    }
+  }
+
+  function clearAllOrders() {
+    if (window.confirm("Clear ALL orders? This cannot be undone.")) {
+      onSave([]);
+    }
+  }
+
   const filtered = orders
     .filter((o) => filter === "all" || o.status === filter)
     .filter(
@@ -387,14 +409,23 @@ function OrdersTab({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
         <input
           type="text"
           placeholder="Search by Order ID, name or phone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border rounded px-3 py-1.5 text-sm focus:outline-none flex-1 min-w-48"
+          data-ocid="orders.search_input"
         />
+        <button
+          type="button"
+          onClick={clearAllOrders}
+          className="flex items-center gap-1 border border-red-300 text-red-500 px-3 py-1.5 rounded text-xs font-semibold hover:bg-red-50 transition-colors whitespace-nowrap"
+          data-ocid="orders.clear_all.button"
+        >
+          <Trash2 size={13} /> Clear All Orders
+        </button>
       </div>
       <div className="flex flex-wrap gap-2 mb-4">
         {[
@@ -547,6 +578,14 @@ function OrdersTab({
                 data-ocid={"orders.whatsapp.button"}
               >
                 <MessageCircle size={13} /> Send WhatsApp
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteOrder(order.id)}
+                className="flex items-center gap-1.5 text-xs bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors"
+                data-ocid={"orders.delete_button"}
+              >
+                <Trash2 size={13} /> Delete
               </button>
             </div>
           </div>
@@ -795,7 +834,7 @@ function ProductsTab({
                 value={form.name || ""}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="w-full border rounded px-3 py-2 text-sm focus:outline-none"
-                placeholder="e.g. Canvas Print"
+                placeholder="e.g. Photo Frame"
               />
             </div>
             <div>
@@ -2036,9 +2075,35 @@ function SettingsTab({
             <option value={8000}>8 seconds</option>
           </select>
         </div>
+        <div className="mb-4">
+          <div className="text-xs text-gray-500 mb-1">Transition Effect</div>
+          <select
+            value={form.heroSlideshowTransition || "crossfade"}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                heroSlideshowTransition: e.target.value as
+                  | "crossfade"
+                  | "slide",
+              })
+            }
+            className="border rounded px-3 py-2 text-sm focus:outline-none"
+          >
+            <option value="crossfade">Crossfade</option>
+            <option value="slide">Slide (Left to Right)</option>
+          </select>
+        </div>
         <div className="mb-3">
-          <label className="cursor-pointer inline-flex items-center gap-2 bg-[#FED100]/10 border border-[#FED100]/40 text-[#7a6600] rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#FED100]/20 transition-colors">
-            <Upload size={14} /> Upload Slide Image
+          <div className="text-xs text-gray-400 mb-2">
+            Up to 5 banners · 1200x628 px · Max 2MB each
+          </div>
+          <label
+            className={`cursor-pointer inline-flex items-center gap-2 bg-[#FED100]/10 border border-[#FED100]/40 text-[#7a6600] rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#FED100]/20 transition-colors ${(form.heroSlideshow || []).length >= 5 ? "opacity-50 pointer-events-none" : ""}`}
+          >
+            <Upload size={14} />{" "}
+            {(form.heroSlideshow || []).length >= 5
+              ? "Max 5 banners reached"
+              : "Upload Slide Image"}
             <input
               type="file"
               accept="image/jpeg,image/png,image/gif,image/webp"
@@ -2046,8 +2111,12 @@ function SettingsTab({
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                if (file.size > 1000000) {
-                  alert("Image too large (max ~1MB for slides)");
+                if ((form.heroSlideshow || []).length >= 5) {
+                  alert("Maximum 5 banners allowed. Remove one first.");
+                  return;
+                }
+                if (file.size > 2000000) {
+                  alert("Image too large (max 2MB per slide)");
                   return;
                 }
                 const reader = new FileReader();
@@ -2112,6 +2181,62 @@ function SettingsTab({
         />
       </div>
 
+      {/* Hero Header Texts */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-1">Hero Header Texts</h3>
+        <p className="text-xs text-gray-400 mb-4">
+          Customize the text displayed in the homepage hero section.
+        </p>
+        <div className="space-y-3">
+          {[
+            {
+              key: "heroBadgeText",
+              label: "Badge Text (small yellow label)",
+              placeholder: "Premium Photo Frames",
+            },
+            {
+              key: "heroHeading",
+              label: "Heading Line 1",
+              placeholder: "Transform Your",
+            },
+            {
+              key: "heroHeadingAccent",
+              label: "Heading Accent (shown in yellow)",
+              placeholder: "Memories",
+            },
+            {
+              key: "heroCtaText",
+              label: "Primary Button Text",
+              placeholder: "Shop Custom Frames",
+            },
+          ].map(({ key, label, placeholder }) => (
+            <div key={key}>
+              <div className="text-xs text-gray-500 mb-1">{label}</div>
+              <input
+                value={(form as unknown as Record<string, string>)[key] || ""}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+                placeholder={placeholder}
+              />
+            </div>
+          ))}
+          <div>
+            <div className="text-xs text-gray-500 mb-1">
+              Subtext (paragraph below heading)
+            </div>
+            <textarea
+              value={form.heroSubtext || ""}
+              onChange={(e) =>
+                setForm({ ...form, heroSubtext: e.target.value })
+              }
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+              rows={2}
+              placeholder="High quality photo frames, collages & more..."
+            />
+          </div>
+        </div>
+      </div>
+
       {/* About Us */}
       <div className="bg-white rounded-xl border border-gray-100 p-5">
         <h3 className="font-semibold mb-3">About Us (Homepage)</h3>
@@ -2143,109 +2268,92 @@ function SettingsTab({
         />
       </div>
 
-      {/* Shipping Zones */}
+      {/* Delivery Locations */}
       <div className="bg-white rounded-xl border border-gray-100 p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold">Shipping Zones & Rates</h3>
+          <div>
+            <h3 className="font-semibold">Delivery Locations & Charges</h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Customers select their location at checkout. Set charges manually.
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => {
-              const newZone = {
-                id: `z${Date.now()}`,
-                name: "New Zone",
-                pincodePrefixes: [],
+              const newLoc = {
+                id: `loc${Date.now()}`,
+                name: "New Location",
                 charge: 100,
               };
               setForm({
                 ...form,
-                shippingZones: [...(form.shippingZones || []), newZone],
+                deliveryLocations: [...(form.deliveryLocations || []), newLoc],
               });
             }}
             className="flex items-center gap-1 bg-[#FED100] text-[#212121] px-3 py-1.5 rounded text-xs font-bold hover:bg-[#e6bc00]"
+            data-ocid="settings.add_location.button"
           >
-            <Plus size={14} /> Add Zone
+            <Plus size={14} /> Add Location
           </button>
         </div>
         <div className="space-y-3">
-          {(form.shippingZones || []).map((zone, zi) => (
+          {(form.deliveryLocations || []).map((loc, li) => (
             <div
-              key={zone.id}
-              className="border rounded-lg p-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-end"
+              key={loc.id}
+              className="border rounded-lg p-3 flex gap-3 items-end"
             >
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Zone Name</div>
+              <div className="flex-1">
+                <div className="text-xs text-gray-500 mb-1">Location Name</div>
                 <input
-                  value={zone.name}
+                  value={loc.name}
                   onChange={(e) => {
-                    const zones = [...(form.shippingZones || [])];
-                    zones[zi] = { ...zone, name: e.target.value };
-                    setForm({ ...form, shippingZones: zones });
+                    const locs = [...(form.deliveryLocations || [])];
+                    locs[li] = { ...loc, name: e.target.value };
+                    setForm({ ...form, deliveryLocations: locs });
                   }}
                   className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none"
-                  placeholder="e.g. Local Assam"
+                  placeholder="e.g. Local (within city)"
+                  data-ocid={`settings.location_name.input.${li + 1}`}
                 />
               </div>
-              <div>
-                <div className="text-xs text-gray-500 mb-1">
-                  Pincode Prefixes (comma-separated)
-                </div>
+              <div className="w-32">
+                <div className="text-xs text-gray-500 mb-1">Charge (₹)</div>
                 <input
-                  value={zone.pincodePrefixes.join(", ")}
+                  type="number"
+                  value={loc.charge}
                   onChange={(e) => {
-                    const zones = [...(form.shippingZones || [])];
-                    zones[zi] = {
-                      ...zone,
-                      pincodePrefixes: e.target.value
-                        .split(",")
-                        .map((s) => s.trim())
-                        .filter(Boolean),
-                    };
-                    setForm({ ...form, shippingZones: zones });
+                    const locs = [...(form.deliveryLocations || [])];
+                    locs[li] = { ...loc, charge: Number(e.target.value) };
+                    setForm({ ...form, deliveryLocations: locs });
                   }}
                   className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none"
-                  placeholder="e.g. 781, 782, 783"
+                  placeholder="0 = Free"
+                  data-ocid={`settings.location_charge.input.${li + 1}`}
                 />
               </div>
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <div className="text-xs text-gray-500 mb-1">Charge (₹)</div>
-                  <input
-                    type="number"
-                    value={zone.charge}
-                    onChange={(e) => {
-                      const zones = [...(form.shippingZones || [])];
-                      zones[zi] = { ...zone, charge: Number(e.target.value) };
-                      setForm({ ...form, shippingZones: zones });
-                    }}
-                    className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      shippingZones: (form.shippingZones || []).filter(
-                        (_, i) => i !== zi,
-                      ),
-                    })
-                  }
-                  className="p-2 text-red-400 hover:text-red-600"
-                >
-                  <X size={16} />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    deliveryLocations: (form.deliveryLocations || []).filter(
+                      (_, i) => i !== li,
+                    ),
+                  })
+                }
+                className="p-2 text-red-400 hover:text-red-600"
+                data-ocid={`settings.delete_location.button.${li + 1}`}
+              >
+                <X size={16} />
+              </button>
             </div>
           ))}
-          {(!form.shippingZones || form.shippingZones.length === 0) && (
+          {(!form.deliveryLocations || form.deliveryLocations.length === 0) && (
             <p className="text-xs text-gray-400">
-              No zones defined. Add a zone above.
+              No locations defined. Add a location above.
             </p>
           )}
         </div>
-        <p className="text-xs text-gray-400 mt-2">
-          Leave pincode prefixes empty for a "catch-all" fallback zone.
-        </p>
       </div>
 
       <button
@@ -2589,6 +2697,247 @@ function ReviewsTab({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function AboutMeTab({
+  settings,
+  onSave,
+}: { settings: SettingsType; onSave: (s: SettingsType) => void }) {
+  const [form, setForm] = useState(
+    settings.aboutMe || {
+      bio: "",
+      tagline: "",
+      experience: "",
+      profilePhoto: "",
+      personalInstagram: "",
+      personalFacebook: "",
+      personalYoutube: "",
+      personalWhatsapp: "",
+      businessInstagram: "",
+      businessFacebook: "",
+      businessYoutube: "",
+      businessWhatsapp: "",
+    },
+  );
+  const [saved, setSaved] = useState(false);
+
+  function save() {
+    onSave({ ...settings, aboutMe: form });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  const profileSrc = form.profilePhoto || settings.logoImage || "";
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* Profile Photo */}
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <h3 className="font-semibold mb-4">Profile Photo</h3>
+        <div className="flex items-center gap-5 flex-wrap">
+          {profileSrc ? (
+            <img
+              src={profileSrc}
+              alt="Profile"
+              className="w-24 h-24 rounded-full object-cover border-4 border-[#FED100] shadow"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-[#FED100] flex items-center justify-center text-[#212121] font-bold text-2xl border-4 border-[#FED100]/40 shadow">
+              {settings.logoText || "TDG"}
+            </div>
+          )}
+          <div className="flex flex-col gap-2">
+            <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors">
+              <Upload size={14} /> Upload Profile Photo
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 2000000) {
+                    alert("Image too large. Max 2MB.");
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = () =>
+                    setForm({ ...form, profilePhoto: reader.result as string });
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
+            {form.profilePhoto && (
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, profilePhoto: "" })}
+                className="text-red-400 hover:text-red-600 text-xs text-left"
+              >
+                Remove photo (use store logo)
+              </button>
+            )}
+            {!form.profilePhoto && (
+              <p className="text-xs text-gray-400">
+                No photo uploaded — store logo is used as fallback.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* About Me Content */}
+      <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-4">
+        <h3 className="font-semibold">About Me Content</h3>
+        <div>
+          <label
+            htmlFor="aboutme-tagline"
+            className="text-xs text-gray-500 block mb-1"
+          >
+            Tagline / Short Subtitle
+          </label>
+          <input
+            id="aboutme-tagline"
+            value={form.tagline}
+            onChange={(e) => setForm({ ...form, tagline: e.target.value })}
+            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+            placeholder="e.g. Artist & Photographer based in Assam"
+            data-ocid="about_me.tagline.input"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="aboutme-bio"
+            className="text-xs text-gray-500 block mb-1"
+          >
+            Bio (main description)
+          </label>
+          <textarea
+            id="aboutme-bio"
+            value={form.bio}
+            onChange={(e) => setForm({ ...form, bio: e.target.value })}
+            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+            rows={5}
+            placeholder="Tell your story, your passion for photography and art..."
+            data-ocid="about_me.bio.textarea"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="aboutme-exp"
+            className="text-xs text-gray-500 block mb-1"
+          >
+            Experience / Journey
+          </label>
+          <textarea
+            id="aboutme-exp"
+            value={form.experience}
+            onChange={(e) => setForm({ ...form, experience: e.target.value })}
+            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+            rows={4}
+            placeholder="Your journey, achievements, how many years of experience..."
+            data-ocid="about_me.experience.textarea"
+          />
+        </div>
+      </div>
+
+      {/* Personal Social Media */}
+      <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-3">
+        <h3 className="font-semibold">Personal Social Media</h3>
+        {[
+          {
+            key: "personalInstagram",
+            label: "Instagram Username",
+            placeholder: "@yourhandle",
+          },
+          {
+            key: "personalFacebook",
+            label: "Facebook URL",
+            placeholder: "https://facebook.com/...",
+          },
+          {
+            key: "personalYoutube",
+            label: "YouTube URL",
+            placeholder: "https://youtube.com/...",
+          },
+          {
+            key: "personalWhatsapp",
+            label: "WhatsApp Number",
+            placeholder: "9876543210",
+          },
+        ].map(({ key, label, placeholder }) => (
+          <div key={key}>
+            <label
+              htmlFor={`aboutme-${key}`}
+              className="text-xs text-gray-500 block mb-1"
+            >
+              {label}
+            </label>
+            <input
+              id={`aboutme-${key}`}
+              value={(form as Record<string, string>)[key] || ""}
+              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+              placeholder={placeholder}
+              data-ocid={`about_me.${key}.input`}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Business Social Media */}
+      <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-3">
+        <h3 className="font-semibold">Business Social Media</h3>
+        {[
+          {
+            key: "businessInstagram",
+            label: "Instagram Username",
+            placeholder: "@yourbusiness",
+          },
+          {
+            key: "businessFacebook",
+            label: "Facebook URL",
+            placeholder: "https://facebook.com/...",
+          },
+          {
+            key: "businessYoutube",
+            label: "YouTube URL",
+            placeholder: "https://youtube.com/...",
+          },
+          {
+            key: "businessWhatsapp",
+            label: "WhatsApp Number",
+            placeholder: "9876543210",
+          },
+        ].map(({ key, label, placeholder }) => (
+          <div key={key}>
+            <label
+              htmlFor={`aboutme-${key}`}
+              className="text-xs text-gray-500 block mb-1"
+            >
+              {label}
+            </label>
+            <input
+              id={`aboutme-${key}`}
+              value={(form as Record<string, string>)[key] || ""}
+              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+              placeholder={placeholder}
+              data-ocid={`about_me.${key}.input`}
+            />
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={save}
+        className="flex items-center gap-2 bg-[#FED100] text-[#212121] px-6 py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
+        data-ocid="about_me.save_button"
+      >
+        <Save size={16} /> {saved ? "Saved!" : "Save About Me"}
+      </button>
     </div>
   );
 }

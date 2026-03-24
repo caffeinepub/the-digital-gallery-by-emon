@@ -32,7 +32,13 @@ export interface CustomerSession {
 export interface ShippingZone {
   id: string;
   name: string;
-  pincodePrefixes: string[]; // e.g. ["781", "782"]
+  pincodePrefixes: string[];
+  charge: number;
+}
+
+export interface DeliveryLocation {
+  id: string;
+  name: string;
   charge: number;
 }
 
@@ -132,6 +138,7 @@ export interface Settings {
   heroSlideshowEnabled?: boolean;
   heroSlideshowInterval?: number;
   heroSlideshow?: { id: string; image: string; caption?: string }[];
+  heroSlideshowTransition?: "crossfade" | "slide";
   theme: "light" | "dark";
   categories: string[];
   pickupCities: string[];
@@ -144,230 +151,250 @@ export interface Settings {
   showBankDetails?: boolean;
   showUpiDetails?: boolean;
   shippingZones?: ShippingZone[];
+  deliveryLocations: DeliveryLocation[];
   whatsappTemplate?: string;
   aboutUs?: string;
+  heroBadgeText: string;
+  heroHeading: string;
+  heroHeadingAccent: string;
+  heroSubtext: string;
+  heroCtaText: string;
+  aboutMe: {
+    bio: string;
+    tagline: string;
+    experience: string;
+    profilePhoto: string;
+    personalInstagram: string;
+    personalFacebook: string;
+    personalYoutube: string;
+    personalWhatsapp: string;
+    businessInstagram: string;
+    businessFacebook: string;
+    businessYoutube: string;
+    businessWhatsapp: string;
+  };
 }
 
 const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "p1",
-    name: 'Canvas Print 4x6"',
+    name: 'Photo Frame 4x6"',
     category: "canvas",
     size: '4x6"',
     mrp: 199,
     price: 149,
     stock: 50,
     active: true,
-    description: "Premium canvas print 4x6 inches | 1 Inch thick",
+    description: "Premium photo frame 4x6 inches | 1 Inch thick",
   },
   {
     id: "p2",
-    name: 'Canvas Print 4x6" (1.5 Inch)',
+    name: 'Photo Frame 4x6" (1.5 Inch)',
     category: "canvas",
     size: '4x6"',
     mrp: 249,
     price: 179,
     stock: 50,
     active: true,
-    description: "Premium canvas print 4x6 inches | 1.5 Inch thick",
+    description: "Premium photo frame 4x6 inches | 1.5 Inch thick",
   },
   {
     id: "p3",
-    name: 'Canvas Print 5x7"',
+    name: 'Photo Frame 5x7"',
     category: "canvas",
     size: '5x7"',
     mrp: 299,
     price: 199,
     stock: 50,
     active: true,
-    description: "Premium canvas print 5x7 inches | 1 Inch thick",
+    description: "Premium photo frame 5x7 inches | 1 Inch thick",
   },
   {
     id: "p4",
-    name: 'Canvas Print 5x7" (1.5 Inch)',
+    name: 'Photo Frame 5x7" (1.5 Inch)',
     category: "canvas",
     size: '5x7"',
     mrp: 299,
     price: 219,
     stock: 50,
     active: true,
-    description: "Premium canvas print 5x7 inches | 1.5 Inch thick",
+    description: "Premium photo frame 5x7 inches | 1.5 Inch thick",
   },
   {
     id: "p5",
-    name: 'Canvas Print 6x8"',
+    name: 'Photo Frame 6x8"',
     category: "canvas",
     size: '6x8"',
     mrp: 349,
     price: 249,
     stock: 40,
     active: true,
-    description: "Premium canvas print 6x8 inches | 1 Inch thick",
+    description: "Premium photo frame 6x8 inches | 1 Inch thick",
   },
   {
     id: "p6",
-    name: 'Canvas Print 6x8" (1.5 Inch)',
+    name: 'Photo Frame 6x8" (1.5 Inch)',
     category: "canvas",
     size: '6x8"',
     mrp: 399,
     price: 279,
     stock: 40,
     active: true,
-    description: "Premium canvas print 6x8 inches | 1.5 Inch thick",
+    description: "Premium photo frame 6x8 inches | 1.5 Inch thick",
   },
   {
     id: "p7",
-    name: "Canvas Print A4",
+    name: "Photo Frame A4",
     category: "canvas",
     size: "A4",
     mrp: 399,
     price: 299,
     stock: 40,
     active: true,
-    description: "Premium canvas print A4 size | 1 Inch thick",
+    description: "Premium photo frame A4 size | 1 Inch thick",
   },
   {
     id: "p8",
-    name: "Canvas Print A4 (1.5 Inch)",
+    name: "Photo Frame A4 (1.5 Inch)",
     category: "canvas",
     size: "A4",
     mrp: 449,
     price: 349,
     stock: 40,
     active: true,
-    description: "Premium canvas print A4 size | 1.5 Inch thick",
+    description: "Premium photo frame A4 size | 1.5 Inch thick",
   },
   {
     id: "p9",
-    name: "Canvas Print A4 Mount",
+    name: "Photo Frame A4 Mount",
     category: "mount",
     size: "A4",
     mrp: 649,
     price: 499,
     stock: 30,
     active: true,
-    description: "Premium canvas print A4 with mount | 1 Inch thick",
+    description: "Premium photo frame A4 with mount | 1 Inch thick",
   },
   {
     id: "p10",
-    name: "Canvas Print A4 Mount (1.5 Inch)",
+    name: "Photo Frame A4 Mount (1.5 Inch)",
     category: "mount",
     size: "A4",
     mrp: 749,
     price: 599,
     stock: 30,
     active: true,
-    description: "Premium canvas print A4 with mount | 1.5 Inch thick",
+    description: "Premium photo frame A4 with mount | 1.5 Inch thick",
   },
   {
     id: "p11",
-    name: 'Canvas Print 12x16"',
+    name: 'Photo Frame 12x16"',
     category: "canvas",
     size: '12x16"',
     mrp: 1199,
     price: 899,
     stock: 25,
     active: true,
-    description: "Premium canvas print 12x16 inches | 1 Inch thick",
+    description: "Premium photo frame 12x16 inches | 1 Inch thick",
   },
   {
     id: "p12",
-    name: 'Canvas Print 12x16" (1.5 Inch)',
+    name: 'Photo Frame 12x16" (1.5 Inch)',
     category: "canvas",
     size: '12x16"',
     mrp: 1399,
     price: 1099,
     stock: 25,
     active: true,
-    description: "Premium canvas print 12x16 inches | 1.5 Inch thick",
+    description: "Premium photo frame 12x16 inches | 1.5 Inch thick",
   },
   {
     id: "p13",
-    name: 'Canvas Print 12x18"',
+    name: 'Photo Frame 12x18"',
     category: "canvas",
     size: '12x18"',
     mrp: 1499,
     price: 1199,
     stock: 20,
     active: true,
-    description: "Premium canvas print 12x18 inches | 1 Inch thick",
+    description: "Premium photo frame 12x18 inches | 1 Inch thick",
   },
   {
     id: "p14",
-    name: 'Canvas Print 12x18" (1.5 Inch)',
+    name: 'Photo Frame 12x18" (1.5 Inch)',
     category: "canvas",
     size: '12x18"',
     mrp: 1699,
     price: 1299,
     stock: 20,
     active: true,
-    description: "Premium canvas print 12x18 inches | 1.5 Inch thick",
+    description: "Premium photo frame 12x18 inches | 1.5 Inch thick",
   },
   {
     id: "p15",
-    name: 'Canvas Print 12x18" Mount',
+    name: 'Photo Frame 12x18" Mount',
     category: "mount",
     size: '12x18"',
     mrp: 1799,
     price: 1399,
     stock: 20,
     active: true,
-    description: "Premium canvas print 12x18 with mount | 1 Inch thick",
+    description: "Premium photo frame 12x18 with mount | 1 Inch thick",
   },
   {
     id: "p16",
-    name: 'Canvas Print 12x18" Mount (1.5 Inch)',
+    name: 'Photo Frame 12x18" Mount (1.5 Inch)',
     category: "mount",
     size: '12x18"',
     mrp: 1999,
     price: 1599,
     stock: 20,
     active: true,
-    description: "Premium canvas print 12x18 with mount | 1.5 Inch thick",
+    description: "Premium photo frame 12x18 with mount | 1.5 Inch thick",
   },
   {
     id: "p17",
-    name: 'Canvas Print 18x24"',
+    name: 'Photo Frame 18x24"',
     category: "canvas",
     size: '18x24"',
     mrp: 2399,
     price: 1899,
     stock: 15,
     active: true,
-    description: "Premium canvas print 18x24 inches | 1 Inch thick",
+    description: "Premium photo frame 18x24 inches | 1 Inch thick",
   },
   {
     id: "p18",
-    name: 'Canvas Print 18x24" (1.5 Inch)',
+    name: 'Photo Frame 18x24" (1.5 Inch)',
     category: "canvas",
     size: '18x24"',
     mrp: 2799,
     price: 2199,
     stock: 15,
     active: true,
-    description: "Premium canvas print 18x24 inches | 1.5 Inch thick",
+    description: "Premium photo frame 18x24 inches | 1.5 Inch thick",
   },
   {
     id: "p19",
-    name: 'Canvas Print 18x24" Mount',
+    name: 'Photo Frame 18x24" Mount',
     category: "mount",
     size: '18x24"',
     mrp: 2899,
     price: 2299,
     stock: 15,
     active: true,
-    description: "Premium canvas print 18x24 with mount | 1 Inch thick",
+    description: "Premium photo frame 18x24 with mount | 1 Inch thick",
   },
   {
     id: "p20",
-    name: 'Canvas Print 18x24" Mount (1.5 Inch)',
+    name: 'Photo Frame 18x24" Mount (1.5 Inch)',
     category: "mount",
     size: '18x24"',
     mrp: 3299,
     price: 2599,
     stock: 15,
     active: true,
-    description: "Premium canvas print 18x24 with mount | 1.5 Inch thick",
+    description: "Premium photo frame 18x24 with mount | 1.5 Inch thick",
   },
 ];
 
@@ -394,7 +421,7 @@ const DEFAULT_SETTINGS: Settings = {
   advancedBanners: [
     {
       id: "ab1",
-      text: "🔥 MEGA SALE: Up to 30% OFF on all canvas prints!",
+      text: "🔥 MEGA SALE: Up to 30% OFF on all photo frames!",
       type: "hero",
       bgColor: "#FED100",
       textColor: "#212121",
@@ -424,6 +451,7 @@ const DEFAULT_SETTINGS: Settings = {
   heroSlideshowEnabled: false,
   heroSlideshowInterval: 4000,
   heroSlideshow: [],
+  heroSlideshowTransition: "crossfade",
   theme: "light",
   categories: ["canvas", "mount"],
   pickupCities: ["Basugaon", "Kokrajhar", "Bongaigaon", "Barpeta Road"],
@@ -432,7 +460,7 @@ const DEFAULT_SETTINGS: Settings = {
   announcementBarEnabled: true,
   midPageAdEnabled: true,
   midPageAdText: "🎁 Create the perfect gift!",
-  midPageAdSubtext: "Premium canvas prints delivered to your door in 3-4 days.",
+  midPageAdSubtext: "Premium photo frames delivered to your door in 3-4 days.",
   midPageAdBg: "#FED100",
   showBankDetails: true,
   showUpiDetails: true,
@@ -464,17 +492,42 @@ const DEFAULT_SETTINGS: Settings = {
     },
     { id: "z3", name: "Rest of India", pincodePrefixes: [], charge: 120 },
   ],
+  deliveryLocations: [
+    { id: "loc1", name: "Local (within city)", charge: 0 },
+    { id: "loc2", name: "Within Assam", charge: 50 },
+    { id: "loc3", name: "Other States", charge: 100 },
+  ],
   whatsappTemplate:
     "Namaste [Customer Name]! 🙏\nYour order with The Digital Gallery is CONFIRMED! ✅\n📦 Item: [Product Name] | 🔢 Qty: [Quantity]\n💰 Total: ₹[Net] | 💵 Advance: ₹[Advance] | 💳 Balance: ₹[Balance]\n📍 Action Required: To coordinate pickup, please share your Live Location in this chat once ready.\nLeave a Photo Review on our site for a special discount! 📸⭐️\n— The Digital Gallery by Emon",
   aboutUs:
-    "The Digital Gallery by Emon is a premium canvas print studio based in Assam. We turn your cherished memories into beautiful wall art. Every print is crafted with care and delivered to your doorstep in 3-4 working days.",
+    "The Digital Gallery by Emon is a premium photo frame studio based in Assam. We turn your cherished memories into beautiful wall art. Every frame is crafted with care and delivered to your doorstep in 3-4 working days.",
+  heroBadgeText: "Premium Photo Frames",
+  heroHeading: "Transform Your",
+  heroHeadingAccent: "Memories",
+  heroSubtext:
+    "High quality photo frames, collages & more. Delivered to your doorstep in just 3-4 days.",
+  heroCtaText: "Shop Custom Frames",
+  aboutMe: {
+    bio: "",
+    tagline: "",
+    experience: "",
+    profilePhoto: "",
+    personalInstagram: "",
+    personalFacebook: "",
+    personalYoutube: "",
+    personalWhatsapp: "",
+    businessInstagram: "",
+    businessFacebook: "",
+    businessYoutube: "",
+    businessWhatsapp: "",
+  },
 };
 
 export function getProducts(): Product[] {
   const version = localStorage.getItem("tdg_products_version");
-  if (version !== "v3") {
+  if (version !== "v4") {
     localStorage.setItem("tdg_products", JSON.stringify(DEFAULT_PRODUCTS));
-    localStorage.setItem("tdg_products_version", "v3");
+    localStorage.setItem("tdg_products_version", "v4");
     return DEFAULT_PRODUCTS;
   }
   const raw = localStorage.getItem("tdg_products");
@@ -618,7 +671,6 @@ export function getShippingCharge(
 ): { zone: ShippingZone | null; charge: number } {
   const prefix6 = pincode.slice(0, 6);
   const prefix3 = pincode.slice(0, 3);
-  // Try to find a matching zone by prefix
   for (const zone of zones) {
     if (zone.pincodePrefixes.length === 0) continue;
     if (
@@ -629,7 +681,6 @@ export function getShippingCharge(
       return { zone, charge: zone.charge };
     }
   }
-  // Fallback: last zone (usually "Rest of India") or first
   const fallback =
     zones.find((z) => z.pincodePrefixes.length === 0) ||
     zones[zones.length - 1];

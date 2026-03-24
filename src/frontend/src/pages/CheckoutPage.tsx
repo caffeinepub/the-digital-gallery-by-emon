@@ -10,7 +10,7 @@ import { useState } from "react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { useData } from "../lib/DataContext";
-import { addOrder, getShippingCharge } from "../lib/data";
+import { addOrder } from "../lib/data";
 
 function playSuccessChime() {
   try {
@@ -45,7 +45,9 @@ export default function CheckoutPage() {
   // Step 1 - Address
   const [name, setName] = useState(customerSession?.name || "");
   const [phone, setPhone] = useState(customerSession?.phone || "");
-  const [pincode, setPincode] = useState("");
+  const [selectedLocationId, setSelectedLocationId] = useState(
+    settings.deliveryLocations?.[0]?.id || "",
+  );
   const [pickupCity, setPickupCity] = useState(
     settings.pickupCities?.[0] || "",
   );
@@ -53,11 +55,13 @@ export default function CheckoutPage() {
   const [photoLater, setPhotoLater] = useState(false);
   const [stepError, setStepError] = useState("");
 
-  // Step 2 - Shipping
-  const shippingZones = settings.shippingZones || [];
-  const shippingResult = getShippingCharge(pincode, shippingZones);
-  const shippingCharge = shippingResult.charge;
-  const shippingZoneName = shippingResult.zone?.name || "Standard";
+  const deliveryLocations = settings.deliveryLocations || [];
+  const selectedLocation =
+    deliveryLocations.find((l) => l.id === selectedLocationId) ||
+    deliveryLocations[0];
+  const shippingCharge = selectedLocation?.charge ?? 0;
+  const locationName = selectedLocation?.name || "Standard";
+
   const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const total = subtotal + shippingCharge;
   const advance = Math.ceil(total * 0.3);
@@ -78,8 +82,8 @@ export default function CheckoutPage() {
       setStepError("Enter a valid 10-digit mobile number.");
       return false;
     }
-    if (!/^\d{6}$/.test(pincode)) {
-      setStepError("Enter a valid 6-digit pincode.");
+    if (!selectedLocationId) {
+      setStepError("Please select a delivery location.");
       return false;
     }
     if (!pickupCity) {
@@ -113,8 +117,8 @@ export default function CheckoutPage() {
         advanceAmount: Math.ceil(item.price * item.quantity * 0.3),
         advancePaid: true,
         deliveryCharge: shippingCharge,
-        shippingZone: shippingZoneName,
-        pincode,
+        shippingZone: locationName,
+        pincode: "",
         pickupCity,
         photoRef: photoFile || "WhatsApp",
         status: "pending",
@@ -133,7 +137,7 @@ export default function CheckoutPage() {
       .map((i) => `${i.productName} x${i.quantity} ₹${i.price * i.quantity}`)
       .join(", ");
     const waText = encodeURIComponent(
-      `🚨 NEW ORDER ALERT!\nCustomer: ${name}\nPhone: ${phone}\nPincode: ${pincode}\nItems: ${orderSummary}\nTotal: ₹${total}\nAdvance: ₹${advance}\nOrder IDs: ${ids.join(", ")}`,
+      `🚨 NEW ORDER ALERT!\nCustomer: ${name}\nPhone: ${phone}\nLocation: ${locationName}\nItems: ${orderSummary}\nTotal: ₹${total}\nAdvance: ₹${advance}\nOrder IDs: ${ids.join(", ")}`,
     );
     window.open(
       `https://wa.me/91${settings.whatsapp}?text=${waText}`,
@@ -183,7 +187,7 @@ export default function CheckoutPage() {
               Order Confirmed! 🎉
             </h1>
             <p className="text-gray-500 mb-4">
-              Thank you for your order! Your canvas prints are on their way to
+              Thank you for your order! Your photo frames are on their way to
               being created.
             </p>
             <div className="bg-[#FED100]/10 border border-[#FED100]/30 rounded-xl p-4 mb-6">
@@ -238,7 +242,7 @@ export default function CheckoutPage() {
 
         {/* Progress indicator */}
         <div className="flex items-center gap-2 mb-8">
-          {["Address", "Shipping", "Payment"].map((label, i) => (
+          {["Address", "Summary", "Payment"].map((label, i) => (
             <div key={label} className="flex items-center gap-2 flex-1">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors ${
@@ -252,7 +256,9 @@ export default function CheckoutPage() {
                 {step > i + 1 ? "✓" : i + 1}
               </div>
               <span
-                className={`text-xs font-medium ${step === i + 1 ? "text-[#212121]" : "text-gray-400"}`}
+                className={`text-xs font-medium ${
+                  step === i + 1 ? "text-[#212121]" : "text-gray-400"
+                }`}
               >
                 {label}
               </span>
@@ -309,22 +315,28 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label
-                  htmlFor="checkout-pincode"
+                  htmlFor="checkout-location"
                   className="text-xs text-gray-500 block mb-1"
                 >
-                  Pincode *
+                  Delivery Location *
                 </label>
-                <input
-                  id="checkout-pincode"
-                  type="text"
-                  value={pincode}
-                  onChange={(e) =>
-                    setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
-                  data-ocid="checkout.pincode.input"
+                <select
+                  id="checkout-location"
+                  value={selectedLocationId}
+                  onChange={(e) => setSelectedLocationId(e.target.value)}
+                  data-ocid="checkout.location.select"
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#FED100]"
-                  placeholder="6-digit pincode"
-                />
+                >
+                  <option value="">-- Select location --</option>
+                  {deliveryLocations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}{" "}
+                      {loc.charge === 0
+                        ? "(Free Delivery)"
+                        : `(+₹${loc.charge})`}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label
@@ -416,32 +428,34 @@ export default function CheckoutPage() {
               className="w-full bg-[#FED100] text-[#212121] font-bold py-3.5 rounded-xl hover:bg-[#e6bc00] transition-colors flex items-center justify-center gap-2"
               data-ocid="checkout.next_step.button"
             >
-              Continue to Shipping <ChevronRight size={18} />
+              Continue to Summary <ChevronRight size={18} />
             </button>
           </div>
         )}
 
-        {/* Step 2: Shipping */}
+        {/* Step 2: Order Summary */}
         {step === 2 && (
           <div
             className="bg-white rounded-2xl border border-[#D6D6D6] p-6"
             data-ocid="checkout.shipping.panel"
           >
             <h2 className="font-bold text-lg text-[#212121] mb-5">
-              Order Summary & Shipping
+              Order Summary
             </h2>
 
             <div className="bg-[#f5f5f5] rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-500">Shipping Zone:</span>
+                <span className="text-sm text-gray-500">
+                  Delivery Location:
+                </span>
                 <span className="text-sm font-semibold text-[#212121]">
-                  {shippingZoneName}
+                  {locationName}
                 </span>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-500">Shipping Charge:</span>
+                <span className="text-sm text-gray-500">Delivery Charge:</span>
                 <span className="text-sm font-semibold text-[#212121]">
-                  ₹{shippingCharge}
+                  {shippingCharge === 0 ? "Free" : `₹${shippingCharge}`}
                 </span>
               </div>
             </div>
@@ -468,10 +482,10 @@ export default function CheckoutPage() {
                 <span>₹{subtotal}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">
-                  Shipping ({shippingZoneName})
+                <span className="text-gray-500">Delivery ({locationName})</span>
+                <span>
+                  {shippingCharge === 0 ? "Free" : `₹${shippingCharge}`}
                 </span>
-                <span>₹{shippingCharge}</span>
               </div>
               <div className="flex justify-between font-bold text-[#212121]">
                 <span>Total</span>

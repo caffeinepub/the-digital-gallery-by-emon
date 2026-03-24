@@ -16,7 +16,7 @@ const FALLBACK_TESTIMONIALS = [
   {
     name: "Priya S.",
     city: "Bongaigaon",
-    text: "Amazing quality! The canvas print looked exactly like the preview. Very happy with the purchase.",
+    text: "Amazing quality! The photo frame looked exactly like the preview. Very happy with the purchase.",
     rating: 5,
     image: undefined as string | undefined,
   },
@@ -71,9 +71,13 @@ export default function HomePage() {
   const slides = settings.heroSlideshow || [];
   const slideshowActive = settings.heroSlideshowEnabled && slides.length > 0;
   const slideInterval = settings.heroSlideshowInterval || 4000;
+  const slideTransition = settings.heroSlideshowTransition || "crossfade";
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: cleanup only effect
   useEffect(() => {
+    if (!slideshowActive || slides.length < 2) return;
+    slideRef.current = setInterval(() => {
+      setSlideIdx((i) => (i + 1) % slides.length);
+    }, slideInterval);
     return () => {
       if (slideRef.current) clearInterval(slideRef.current);
     };
@@ -104,10 +108,12 @@ export default function HomePage() {
   }, []);
 
   const products = allProducts.filter((p) => p.active);
-  const allCategories = [
-    "all",
-    ...Array.from(new Set(products.map((p) => p.category))),
-  ];
+  // Use admin-defined categories; fallback to product-derived ones if settings.categories is empty
+  const adminCats =
+    settings.categories && settings.categories.length > 0
+      ? settings.categories
+      : Array.from(new Set(products.map((p) => p.category)));
+  const allCategories = ["all", ...adminCats];
   const filtered = products.filter(
     (p) => filter === "all" || p.category === filter,
   );
@@ -162,25 +168,59 @@ export default function HomePage() {
       {/* Hero */}
       <section
         className={`${heroSectionBg} text-white relative overflow-hidden`}
-        style={{ minHeight: slideshowActive ? "420px" : undefined }}
+        style={{ minHeight: "420px" }}
       >
         {/* Slideshow background */}
         {slideshowActive && (
-          <div className="absolute inset-0">
-            {slides.map((slide, i) => (
+          <div className="absolute inset-0 overflow-hidden">
+            {slideTransition === "crossfade" ? (
+              slides.map((slide, i) => (
+                <div
+                  key={slide.id}
+                  className="absolute inset-0"
+                  style={{
+                    opacity: i === slideIdx ? 1 : 0,
+                    transition: "opacity 1s ease-in-out",
+                    willChange: "opacity",
+                  }}
+                >
+                  <img
+                    src={slide.image}
+                    alt={slide.caption || `Slide ${i + 1}`}
+                    className="w-full h-full object-cover"
+                    style={{ display: "block" }}
+                  />
+                  <div className="absolute inset-0 bg-black/50" />
+                </div>
+              ))
+            ) : (
+              /* Slide transition: left-to-right (new slide comes from right) */
               <div
-                key={slide.id}
-                className="absolute inset-0 transition-opacity duration-1000"
-                style={{ opacity: i === slideIdx ? 1 : 0 }}
+                className="absolute inset-0 flex"
+                style={{
+                  width: `${slides.length * 100}%`,
+                  transform: `translateX(-${(slideIdx / slides.length) * 100}%)`,
+                  transition: "transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
+                  willChange: "transform",
+                }}
               >
-                <img
-                  src={slide.image}
-                  alt={slide.caption || "Slide"}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/50" />
+                {slides.map((slide, i) => (
+                  <div
+                    key={slide.id}
+                    className="relative flex-shrink-0"
+                    style={{ width: `${100 / slides.length}%` }}
+                  >
+                    <img
+                      src={slide.image}
+                      alt={slide.caption || `Slide ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      style={{ display: "block" }}
+                    />
+                    <div className="absolute inset-0 bg-black/50" />
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
             {/* Dot indicators */}
             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
               {slides.map((slide, i) => (
@@ -188,10 +228,10 @@ export default function HomePage() {
                   key={slide.id}
                   type="button"
                   onClick={() => setSlideIdx(i)}
-                  className={`w-2 h-2 rounded-full transition-all ${
+                  className={`h-2 rounded-full transition-all duration-300 ${
                     i === slideIdx
                       ? "bg-[#FED100] w-4"
-                      : "bg-white/50 hover:bg-white/80"
+                      : "w-2 bg-white/50 hover:bg-white/80"
                   }`}
                   aria-label={`Go to slide ${i + 1}`}
                 />
@@ -203,16 +243,19 @@ export default function HomePage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
           <div className="flex-1">
             <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-3">
-              Premium Canvas Prints
+              {settings.heroBadgeText || "Premium Photo Frames"}
             </p>
             <h1 className="font-playfair text-4xl md:text-6xl font-bold leading-tight mb-4">
-              Transform Your
+              {settings.heroHeading || "Transform Your"}
               <br />
-              <span className="text-[#FED100]">Memories</span> Into Art
+              <span className="text-[#FED100]">
+                {settings.heroHeadingAccent || "Memories"}
+              </span>{" "}
+              Into Art
             </h1>
             <p className="text-gray-300 text-lg mb-8 max-w-md">
-              High quality canvas prints, collages &amp; more. Delivered to your
-              doorstep in just 3-4 days.
+              {settings.heroSubtext ||
+                "High quality photo frames, collages & more. Delivered to your doorstep in just 3-4 days."}
             </p>
             <div className="flex flex-wrap gap-3">
               <button
@@ -224,7 +267,7 @@ export default function HomePage() {
                 }
                 className="bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold px-8 py-3 rounded-lg transition-colors uppercase tracking-wide text-sm"
               >
-                Shop Custom Prints
+                {settings.heroCtaText || "Shop Custom Frames"}
               </button>
               <button
                 type="button"
@@ -290,7 +333,9 @@ export default function HomePage() {
           <h2
             className={`font-playfair text-3xl md:text-4xl font-bold ${text}`}
           >
-            Premium Canvas Prints
+            {filter === "all"
+              ? "All Products"
+              : `${filter.charAt(0).toUpperCase() + filter.slice(1)} Collection`}
           </h2>
           <p className={`${subText} mt-2`}>
             Choose from our wide range of sizes and styles

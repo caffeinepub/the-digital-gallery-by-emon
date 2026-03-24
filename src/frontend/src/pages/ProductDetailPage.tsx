@@ -120,7 +120,7 @@ export default function ProductDetailPage() {
                     <div className="font-playfair text-4xl font-bold text-[#333533]">
                       {product.size}
                     </div>
-                    <div className="text-gray-500 mt-2">Canvas Print</div>
+                    <div className="text-gray-500 mt-2">Photo Frame</div>
                   </div>
                 </div>
               )}

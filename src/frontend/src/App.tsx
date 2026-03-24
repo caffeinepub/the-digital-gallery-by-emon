@@ -6,6 +6,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { DataProvider } from "./lib/DataContext";
+import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -57,6 +58,11 @@ const productDetailRoute = createRoute({
   path: "/product/$productId",
   component: ProductDetailPage,
 });
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/about",
+  component: AboutPage,
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,
@@ -67,6 +73,7 @@ const routeTree = rootRoute.addChildren([
   checkoutRoute,
   myOrdersRoute,
   productDetailRoute,
+  aboutRoute,
 ]);
 const router = createRouter({ routeTree });
 

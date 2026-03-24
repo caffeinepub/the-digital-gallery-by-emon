@@ -72,7 +72,7 @@ export default function Navbar() {
                     ?.scrollIntoView({ behavior: "smooth" })
                 }
               >
-                Canvas Prints
+                Photo Frames
               </button>
               <button
                 type="button"
@@ -91,6 +91,13 @@ export default function Navbar() {
                 data-ocid="nav.track.link"
               >
                 Track Order
+              </Link>
+              <Link
+                to="/about"
+                className="hover:text-[#FED100] transition-colors"
+                data-ocid="nav.about.link"
+              >
+                About
               </Link>
               {customerSession && (
                 <Link
@@ -183,7 +190,7 @@ export default function Navbar() {
                   setMenuOpen(false);
                 }}
               >
-                Canvas Prints
+                Photo Frames
               </button>
               <button
                 type="button"
@@ -204,6 +211,14 @@ export default function Navbar() {
                 data-ocid="mobile_nav.track.link"
               >
                 Track Order
+              </Link>
+              <Link
+                to="/about"
+                className="block hover:text-[#FED100]"
+                onClick={() => setMenuOpen(false)}
+                data-ocid="mobile_nav.about.link"
+              >
+                About
               </Link>
               {customerSession && (
                 <Link

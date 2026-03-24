@@ -72,7 +72,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               </div>
               <div className="text-[#333533] text-sm mt-1 opacity-70">
                 {product.category === "canvas"
-                  ? "Canvas Print"
+                  ? "Photo Frame"
                   : product.category === "collage"
                     ? "Collage"
                     : "Special"}

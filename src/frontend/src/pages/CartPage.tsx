@@ -50,7 +50,7 @@ export default function CartPage() {
               Your cart is empty
             </h2>
             <p className="text-gray-400 mb-6">
-              Add some beautiful canvas prints to get started.
+              Add some beautiful photo frames to get started.
             </p>
             <button
               type="button"
