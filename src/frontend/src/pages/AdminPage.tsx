@@ -21,7 +21,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useData } from "../lib/DataContext";
 import {
   type Banner,
@@ -34,6 +34,32 @@ import {
   type Supplier,
   backupData,
 } from "../lib/data";
+
+function compressImage(
+  file: File,
+  maxWidth = 800,
+  quality = 0.7,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const scale = Math.min(1, maxWidth / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = e.target!.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 type Tab =
   | "dashboard"
@@ -742,6 +768,7 @@ function ProductsTab({
         description: form.description || "",
         image: form.images?.[0] || form.image,
         images: form.images || (form.image ? [form.image] : []),
+        highlights: form.highlights || [],
       };
       onSave([...products, newP]);
     } else if (editId) {
@@ -907,6 +934,55 @@ function ProductsTab({
                 className="w-full border rounded px-3 py-2 text-sm focus:outline-none"
               />
             </div>
+            <div className="col-span-2 md:col-span-3">
+              <div className="text-xs text-gray-500 block mb-1">
+                Product Highlights (max 6 bullet points)
+              </div>
+              <div className="space-y-2">
+                {(form.highlights || []).map((h: string, hi: number) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static list
+                  <div key={hi} className="flex gap-2 items-center">
+                    <span className="text-[#FED100] text-sm">✓</span>
+                    <input
+                      value={h}
+                      onChange={(e) => {
+                        const updated = [...(form.highlights || [])];
+                        updated[hi] = e.target.value;
+                        setForm({ ...form, highlights: updated });
+                      }}
+                      className="flex-1 border rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#FED100]"
+                      placeholder="e.g. Premium quality wood frame"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = (form.highlights || []).filter(
+                          (_: string, i: number) => i !== hi,
+                        );
+                        setForm({ ...form, highlights: updated });
+                      }}
+                      className="text-red-400 hover:text-red-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                {(form.highlights || []).length < 6 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        highlights: [...(form.highlights || []), ""],
+                      })
+                    }
+                    className="text-xs text-[#b38b00] hover:underline flex items-center gap-1"
+                  >
+                    <Plus size={12} /> Add Highlight
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -924,7 +1000,7 @@ function ProductsTab({
             </div>
             <div className="col-span-2 md:col-span-3">
               <div className="text-xs text-gray-500 block mb-2">
-                Product Images (up to 5 slots, JPG/PNG, max 500KB each)
+                Product Images (up to 5 slots, auto-compressed, JPG/PNG/WEBP)
               </div>
               <div className="flex flex-wrap gap-3">
                 {[0, 1, 2, 3, 4].map((slotIdx) => {
@@ -968,21 +1044,15 @@ function ProductsTab({
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (!file) return;
-                              if (file.size > 600000) {
-                                alert("Image too large (max 500KB).");
-                                return;
-                              }
-                              const reader = new FileReader();
-                              reader.onload = () => {
+                              compressImage(file).then((compressed) => {
                                 const newImgs = [...(form.images || [])];
-                                newImgs[slotIdx] = reader.result as string;
+                                newImgs[slotIdx] = compressed;
                                 setForm({
                                   ...form,
                                   images: newImgs,
                                   image: newImgs[0],
                                 });
-                              };
-                              reader.readAsDataURL(file);
+                              });
                             }}
                           />
                         </label>
@@ -1410,6 +1480,10 @@ function SettingsTab({
   const [newBanner, setNewBanner] = useState("");
   const [newCity, setNewCity] = useState("");
 
+  useEffect(() => {
+    setForm(settings);
+  }, [settings]);
+
   function save() {
     onSave(form);
     setSaved(true);
@@ -1471,6 +1545,52 @@ function SettingsTab({
         <p className="text-xs text-gray-400 mt-2">
           Theme will apply when saved and page is refreshed.
         </p>
+      </div>
+
+      {/* Brand Colors */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-1">Brand Colors</h3>
+        <p className="text-xs text-gray-400 mb-4">
+          Customize the site color palette. Changes apply instantly after
+          saving.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+          {(
+            [
+              { key: "colorBg", label: "Background", default: "#f5f5f5" },
+              { key: "colorDark", label: "Dark Text", default: "#212121" },
+              { key: "colorMedium", label: "Medium Dark", default: "#333533" },
+              { key: "colorLight", label: "Light Gray", default: "#D6D6D6" },
+              { key: "colorAmber", label: "Amber/Gold", default: "#FED100" },
+              {
+                key: "colorYellow",
+                label: "Bright Yellow",
+                default: "#FFEE32",
+              },
+            ] as const
+          ).map(({ key, label, default: def }) => (
+            <div key={key}>
+              <label className="text-xs text-gray-500 block mb-1 cursor-pointer">
+                {label}
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="color"
+                    value={
+                      (form as unknown as Record<string, string>)[key] || def
+                    }
+                    onChange={(e) =>
+                      setForm({ ...form, [key]: e.target.value })
+                    }
+                    className="w-10 h-10 rounded border border-gray-200 cursor-pointer"
+                  />
+                  <span className="text-xs font-mono text-gray-500">
+                    {(form as unknown as Record<string, string>)[key] || def}
+                  </span>
+                </div>
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Identity */}
@@ -1844,6 +1964,61 @@ function SettingsTab({
               onChange={(e) => setForm({ ...form, popupCode: e.target.value })}
               className="w-full border rounded px-3 py-2 text-sm focus:outline-none"
             />
+          </div>
+        </div>
+        {/* Popup Banner Image Upload */}
+        <div className="mt-4">
+          <div className="text-xs text-gray-500 block mb-2 font-medium">
+            Popup Banner Image (1:1 square, JPG/PNG)
+          </div>
+          <div className="flex items-start gap-4">
+            {form.popupImage ? (
+              <div className="relative">
+                <img
+                  src={form.popupImage}
+                  alt="Popup preview"
+                  className="w-32 h-32 object-cover rounded-lg border"
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, popupImage: undefined })}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 text-xs text-center">
+                No image
+              </div>
+            )}
+            <div>
+              <label className="cursor-pointer inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm px-4 py-2 rounded-lg">
+                <Upload size={14} /> Upload Image
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) =>
+                      setForm({
+                        ...form,
+                        popupImage: ev.target?.result as string,
+                      });
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
+              <p className="text-xs text-gray-400 mt-1">
+                1:1 square, JPG/PNG, max 2MB
+              </p>
+              <p className="text-xs text-gray-400">
+                When set, image replaces the icon in the popup
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -2354,6 +2529,365 @@ function SettingsTab({
             </p>
           )}
         </div>
+      </div>
+
+      {/* Flash Sale Timer */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold">Flash Sale Timer</h3>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.offerTimerEnabled !== false}
+              onChange={(e) =>
+                setForm({ ...form, offerTimerEnabled: e.target.checked })
+              }
+              className="w-4 h-4"
+            />
+            <span className="text-sm">
+              {form.offerTimerEnabled !== false ? "Timer ON" : "Timer OFF"}
+            </span>
+          </label>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500 block mb-1">
+            Timer Label Text
+          </div>
+          <input
+            value={form.offerTimerText || "Flash Sale ends in:"}
+            onChange={(e) =>
+              setForm({ ...form, offerTimerText: e.target.value })
+            }
+            placeholder="Flash Sale ends in:"
+            className="w-full max-w-xs border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+          />
+        </div>
+      </div>
+
+      {/* Our Work Gallery */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <Image size={16} /> Our Work Gallery
+        </h3>
+        <p className="text-xs text-gray-400 mb-4">
+          Upload photos of completed frames to show on the homepage and About
+          page (max 20 photos).
+        </p>
+        <div className="flex flex-wrap gap-3 mb-3">
+          {((form as any).ourWorkPhotos || []).map(
+            (photo: string, idx: number) => (
+              <div key={String(idx)} className="relative group">
+                <img
+                  src={photo}
+                  alt="Work"
+                  className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const photos = [...((form as any).ourWorkPhotos || [])];
+                    photos.splice(idx, 1);
+                    setForm({ ...form, ourWorkPhotos: photos } as any);
+                  }}
+                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ×
+                </button>
+              </div>
+            ),
+          )}
+          {((form as any).ourWorkPhotos || []).length < 20 && (
+            <label className="w-20 h-20 bg-[#FED100]/10 border-2 border-dashed border-[#FED100] rounded-lg flex flex-col items-center justify-center text-xs text-[#b38b00] cursor-pointer hover:bg-[#FED100]/20">
+              <Upload size={16} className="mb-1" />
+              Add Photo
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 600000) {
+                    alert("Image too large (max ~500KB)");
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const photos = [...((form as any).ourWorkPhotos || [])];
+                    photos.push(reader.result as string);
+                    setForm({ ...form, ourWorkPhotos: photos } as any);
+                  };
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
+          )}
+        </div>
+      </div>
+
+      {/* Custom Frame Pricing */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-4">
+          Custom Frame Pricing (Base Rates)
+        </h3>
+        <p className="text-xs text-gray-400 mb-4">
+          Price per square unit. Final price = (W × H × rate) + add-on prices.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label
+              htmlFor="rate-cm"
+              className="text-xs text-gray-500 block mb-1"
+            >
+              ₹ per cm²
+            </label>
+            <input
+              id="rate-cm"
+              type="number"
+              min="0"
+              step="0.5"
+              value={(form as any).customFrameBaseRateCm ?? 3}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  customFrameBaseRateCm: Number(e.target.value),
+                } as any)
+              }
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#FED100]"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="rate-inch"
+              className="text-xs text-gray-500 block mb-1"
+            >
+              ₹ per inch²
+            </label>
+            <input
+              id="rate-inch"
+              type="number"
+              min="0"
+              step="1"
+              value={(form as any).customFrameBaseRateInch ?? 50}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  customFrameBaseRateInch: Number(e.target.value),
+                } as any)
+              }
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#FED100]"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="rate-ft"
+              className="text-xs text-gray-500 block mb-1"
+            >
+              ₹ per ft²
+            </label>
+            <input
+              id="rate-ft"
+              type="number"
+              min="0"
+              step="5"
+              value={(form as any).customFrameBaseRateFt ?? 500}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  customFrameBaseRateFt: Number(e.target.value),
+                } as any)
+              }
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#FED100]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Custom Frame Options */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-4">
+          Custom Frame Options (Photo Cards)
+        </h3>
+        <p className="text-xs text-gray-400 mb-4">
+          Upload photos for each option. Set add-on price for each. These appear
+          in the custom frame modal.
+        </p>
+
+        {/* Helper component for option list */}
+        {(
+          [
+            "frameWoodOptions",
+            "frameDesignOptions",
+            "frameStyleOptions",
+            "framePrintingOptions",
+            "frameColourOptions",
+          ] as const
+        ).map((key) => {
+          const labels: Record<string, string> = {
+            frameWoodOptions: "🎨 Wood Colour",
+            frameDesignOptions: "🎨 Frame Designs",
+            frameStyleOptions: "✨ Frame Styles",
+            framePrintingOptions: "🖨️ Printing Services",
+            frameColourOptions: "🎨 Frame Colours",
+          };
+          const emojis: Record<string, string> = {
+            frameWoodOptions: "🪵",
+            frameDesignOptions: "🎨",
+            frameStyleOptions: "✨",
+            framePrintingOptions: "🖨️",
+            frameColourOptions: "🎨",
+          };
+          const newNames: Record<string, string> = {
+            frameWoodOptions: "New Wood",
+            frameDesignOptions: "New Design",
+            frameStyleOptions: "New Style",
+            framePrintingOptions: "New Print",
+            frameColourOptions: "New Colour",
+          };
+          const idPfx: Record<string, string> = {
+            frameWoodOptions: "fw",
+            frameDesignOptions: "fd",
+            frameStyleOptions: "fs",
+            framePrintingOptions: "fp",
+            frameColourOptions: "fc",
+          };
+          const opts = ((form as any)[key] || []) as Array<{
+            id: string;
+            name: string;
+            image?: string;
+            addonPrice?: number;
+          }>;
+          return (
+            <div key={key} className="mb-6">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                {labels[key]}
+              </h4>
+              <div className="flex flex-wrap gap-3 mb-2">
+                {opts.map((opt, idx) => (
+                  <div
+                    key={opt.id}
+                    className="flex flex-col items-center gap-1 group w-20"
+                  >
+                    <label className="cursor-pointer relative">
+                      {opt.image ? (
+                        <img
+                          src={opt.image}
+                          alt={opt.name}
+                          className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-xl">
+                          {emojis[key]}
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            const updated = [...opts];
+                            updated[idx] = {
+                              ...opt,
+                              image: ev.target?.result as string,
+                            };
+                            setForm({ ...form, [key]: updated } as any);
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      <span className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                        📷
+                      </span>
+                    </label>
+                    <input
+                      value={opt.name}
+                      onChange={(e) => {
+                        const updated = [...opts];
+                        updated[idx] = { ...opt, name: e.target.value };
+                        setForm({ ...form, [key]: updated } as any);
+                      }}
+                      className="w-16 text-xs border rounded px-1 py-0.5 text-center focus:outline-none focus:border-[#FED100]"
+                      placeholder="Name"
+                    />
+                    <div className="flex items-center gap-0.5">
+                      <span className="text-[10px] text-gray-400">+₹</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={opt.addonPrice ?? 0}
+                        onChange={(e) => {
+                          const updated = [...opts];
+                          updated[idx] = {
+                            ...opt,
+                            addonPrice: Number(e.target.value),
+                          };
+                          setForm({ ...form, [key]: updated } as any);
+                        }}
+                        className="w-12 text-xs border rounded px-1 py-0.5 text-center focus:outline-none focus:border-[#FED100]"
+                      />
+                    </div>
+                    {key !== "frameWoodOptions" &&
+                      key !== "frameColourOptions" && (
+                        <label className="flex items-center gap-1 cursor-pointer mt-0.5">
+                          <input
+                            type="checkbox"
+                            checked={
+                              (opt as any).blackWhiteIncompatible || false
+                            }
+                            onChange={(e) => {
+                              const updated = [...opts];
+                              updated[idx] = {
+                                ...opt,
+                                blackWhiteIncompatible: e.target.checked,
+                              } as any;
+                              setForm({ ...form, [key]: updated } as any);
+                            }}
+                            className="w-3 h-3"
+                          />
+                          <span className="text-[9px] text-red-500 leading-tight">
+                            ❌ Not with B&W
+                          </span>
+                        </label>
+                      )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          [key]: opts.filter((_, i) => i !== idx),
+                        } as any)
+                      }
+                      className="text-red-400 hover:text-red-600 text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = [
+                      ...opts,
+                      {
+                        id: `${idPfx[key]}${Date.now()}`,
+                        name: newNames[key],
+                        addonPrice: 0,
+                      },
+                    ];
+                    setForm({ ...form, [key]: updated } as any);
+                  }}
+                  className="w-16 h-16 bg-[#FED100]/20 border-2 border-dashed border-[#FED100] rounded-lg flex items-center justify-center text-2xl hover:bg-[#FED100]/30"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <button

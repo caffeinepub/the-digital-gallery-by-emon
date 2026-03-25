@@ -1,133 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useData } from "../lib/DataContext";
 
-// Assam scenic silhouette strip — tea bushes, rhino, Kamakhya-style temple
-function AssamSceneStrip() {
-  return (
-    <svg
-      viewBox="0 0 1200 80"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMax slice"
-      className="w-full h-16 md:h-20 block"
-      aria-hidden="true"
-    >
-      {/* Ground baseline */}
-      <rect x="0" y="60" width="1200" height="20" fill="#1a1a1a" />
-
-      {/* Rolling hills / terrain */}
-      <path
-        d="M0 60 Q100 40 200 55 Q300 68 400 50 Q500 35 600 52 Q700 65 800 48 Q900 34 1000 55 Q1100 68 1200 50 L1200 80 L0 80 Z"
-        fill="#1a1a1a"
-        opacity="0.25"
-      />
-
-      {/* Tea bushes — dome clusters along the ground */}
-      {/* Bush group 1 */}
-      <ellipse cx="60" cy="60" rx="22" ry="12" fill="#1a1a1a" />
-      <ellipse cx="82" cy="58" rx="18" ry="11" fill="#1a1a1a" />
-      <ellipse cx="40" cy="61" rx="16" ry="10" fill="#1a1a1a" />
-      {/* Bush group 2 */}
-      <ellipse cx="190" cy="59" rx="24" ry="13" fill="#1a1a1a" />
-      <ellipse cx="215" cy="57" rx="19" ry="11" fill="#1a1a1a" />
-      <ellipse cx="168" cy="61" rx="17" ry="10" fill="#1a1a1a" />
-      {/* Bush group 3 */}
-      <ellipse cx="340" cy="61" rx="22" ry="12" fill="#1a1a1a" />
-      <ellipse cx="362" cy="59" rx="18" ry="11" fill="#1a1a1a" />
-      <ellipse cx="320" cy="62" rx="16" ry="10" fill="#1a1a1a" />
-      {/* Bush group 4 */}
-      <ellipse cx="490" cy="60" rx="23" ry="12" fill="#1a1a1a" />
-      <ellipse cx="513" cy="58" rx="19" ry="11" fill="#1a1a1a" />
-      <ellipse cx="469" cy="61" rx="17" ry="10" fill="#1a1a1a" />
-      {/* Bush group 5 */}
-      <ellipse cx="640" cy="61" rx="22" ry="12" fill="#1a1a1a" />
-      <ellipse cx="662" cy="59" rx="18" ry="11" fill="#1a1a1a" />
-      <ellipse cx="619" cy="62" rx="16" ry="10" fill="#1a1a1a" />
-      {/* Bush group 6 */}
-      <ellipse cx="780" cy="60" rx="21" ry="11" fill="#1a1a1a" />
-      <ellipse cx="801" cy="58" rx="17" ry="10" fill="#1a1a1a" />
-      <ellipse cx="760" cy="61" rx="15" ry="9" fill="#1a1a1a" />
-
-      {/* One-horned Rhino silhouette — facing right, around x=880 */}
-      <g transform="translate(855, 22)" fill="#1a1a1a">
-        {/* Body */}
-        <ellipse cx="28" cy="22" rx="28" ry="14" />
-        {/* Head */}
-        <ellipse cx="51" cy="18" rx="13" ry="10" />
-        {/* Horn on snout */}
-        <polygon points="62,12 66,6 64,13" />
-        {/* Ear */}
-        <ellipse cx="49" cy="10" rx="4" ry="5" />
-        {/* Front legs */}
-        <rect x="38" y="32" width="6" height="10" rx="2" />
-        <rect x="28" y="33" width="6" height="9" rx="2" />
-        {/* Rear legs */}
-        <rect x="10" y="32" width="6" height="10" rx="2" />
-        <rect x="2" y="33" width="6" height="9" rx="2" />
-        {/* Tail */}
-        <path
-          d="M0 22 Q-6 18 -5 14"
-          strokeWidth="3"
-          stroke="#1a1a1a"
-          fill="none"
-          strokeLinecap="round"
-        />
-      </g>
-
-      {/* Kamakhya-style temple / pagoda silhouette — right side, around x=1060 */}
-      <g transform="translate(1040, 0)" fill="#1a1a1a">
-        {/* Base platform */}
-        <rect x="0" y="54" width="80" height="6" rx="1" />
-        {/* Main body */}
-        <rect x="10" y="38" width="60" height="18" />
-        {/* Mid tier */}
-        <rect x="18" y="26" width="44" height="14" />
-        {/* Upper tier */}
-        <rect x="26" y="16" width="28" height="12" />
-        {/* Shikhara / spire */}
-        <polygon points="40,0 50,16 30,16" />
-        {/* Small dome on top */}
-        <ellipse cx="40" cy="3" rx="5" ry="4" />
-        {/* Steps */}
-        <rect x="28" y="58" width="24" height="4" rx="1" />
-        {/* Flag on spire */}
-        <line
-          x1="40"
-          y1="0"
-          x2="40"
-          y2="-6"
-          stroke="#1a1a1a"
-          strokeWidth="1.5"
-        />
-        <polygon points="40,-6 48,-3 40,-1" />
-        {/* Decorative arches on body */}
-        <path
-          d="M18 38 Q25 32 32 38"
-          stroke="#D4A017"
-          strokeWidth="1.5"
-          fill="none"
-        />
-        <path
-          d="M48 38 Q55 32 62 38"
-          stroke="#D4A017"
-          strokeWidth="1.5"
-          fill="none"
-        />
-      </g>
-
-      {/* Bamboo stalks — left edge */}
-      <g fill="#1a1a1a">
-        <rect x="2" y="10" width="4" height="52" rx="2" />
-        <rect x="10" y="18" width="3" height="44" rx="1.5" />
-        <rect x="17" y="14" width="4" height="48" rx="2" />
-        {/* Bamboo leaves */}
-        <path d="M4 20 Q12 15 8 28" fill="#1a1a1a" />
-        <path d="M13 30 Q20 24 17 36" fill="#1a1a1a" />
-        <path d="M19 22 Q26 17 23 29" fill="#1a1a1a" />
-      </g>
-    </svg>
-  );
-}
-
 export default function Footer() {
   const { settings } = useData();
   const year = new Date().getFullYear();
@@ -140,13 +13,23 @@ export default function Footer() {
 
   return (
     <footer className="mt-0" style={{ backgroundColor: "#D4A017" }}>
-      {/* Decorative scenic strip */}
-      <div className="overflow-hidden">
-        <AssamSceneStrip />
+      {/* Wave SVG */}
+      <div className="overflow-hidden leading-none">
+        <svg
+          viewBox="0 0 1200 40"
+          preserveAspectRatio="none"
+          className="w-full h-10 block"
+          aria-hidden="true"
+        >
+          <path
+            d="M0,20 C300,40 900,0 1200,20 L1200,40 L0,40 Z"
+            fill="#D4A017"
+          />
+        </svg>
       </div>
 
       {/* Main footer body */}
-      <div className="max-w-7xl mx-auto px-6 pt-8 pb-6">
+      <div className="max-w-7xl mx-auto px-6 pt-4 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           {/* Column 1: Brand */}
           <div>

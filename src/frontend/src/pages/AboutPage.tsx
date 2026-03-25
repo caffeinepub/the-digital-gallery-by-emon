@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { SiFacebook, SiInstagram, SiWhatsapp, SiYoutube } from "react-icons/si";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import OwnerShowcase from "../components/OwnerShowcase";
 import { useData } from "../lib/DataContext";
 
 export default function AboutPage() {
@@ -277,7 +278,42 @@ export default function AboutPage() {
             )}
           </div>
         )}
+        {/* Our Portfolio */}
+        {(settings as any).ourWorkPhotos &&
+          (settings as any).ourWorkPhotos.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-10"
+              data-ocid="about.portfolio.section"
+            >
+              <h2 className="font-playfair text-2xl font-bold text-[#212121] mb-2">
+                Our Portfolio
+              </h2>
+              <p className="text-gray-500 mb-5">
+                Real frames, real memories we've created
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {((settings as any).ourWorkPhotos as string[]).map(
+                  (photo: string, idx: number) => (
+                    <div
+                      key={String(idx)}
+                      className="rounded-xl overflow-hidden border border-[#D6D6D6] shadow-sm aspect-square"
+                    >
+                      <img
+                        src={photo}
+                        alt="Our work"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ),
+                )}
+              </div>
+            </motion.section>
+          )}
       </main>
+      <OwnerShowcase />
       <Footer />
     </div>
   );

@@ -3,23 +3,39 @@ import {
   LogIn,
   LogOut,
   Menu,
+  Moon,
   Package,
   Search,
   ShoppingCart,
+  Sun,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useData } from "../lib/DataContext";
 import CustomerLoginModal from "./CustomerLoginModal";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const { settings, cart, customerSession, setCustomerSession } = useData();
+  const { settings, setSettings, cart, customerSession, setCustomerSession } =
+    useData();
   const navigate = useNavigate();
   const isDark = settings.theme === "dark";
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Apply dark class to html element
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
+
+  function toggleTheme() {
+    setSettings({ ...settings, theme: isDark ? "light" : "dark" });
+  }
 
   return (
     <>
@@ -30,9 +46,7 @@ export default function Navbar() {
           </div>
         )}
 
-        <nav
-          className={`${isDark ? "bg-[#212121]" : "bg-[#212121]"} text-white`}
-        >
+        <nav className="bg-[#212121] text-white">
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2 flex-shrink-0">
               {settings.logoImage ? (
@@ -46,7 +60,7 @@ export default function Navbar() {
                   {settings.logoText}
                 </div>
               )}
-              <span className="font-playfair text-lg font-semibold hidden sm:block leading-tight">
+              <span className="font-playfair text-lg font-semibold leading-tight">
                 The Digital Gallery
                 <br />
                 <span className="text-gray-400 text-xs font-normal">
@@ -111,6 +125,30 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Dark/Light Toggle */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-1.5 rounded-lg hover:bg-white/10 transition-all duration-300"
+                aria-label={
+                  isDark ? "Switch to light mode" : "Switch to dark mode"
+                }
+                data-ocid="nav.theme.toggle"
+              >
+                <span
+                  className="block transition-transform duration-300"
+                  style={{
+                    transform: isDark ? "rotate(0deg)" : "rotate(180deg)",
+                  }}
+                >
+                  {isDark ? (
+                    <Sun size={18} className="text-[#FED100]" />
+                  ) : (
+                    <Moon size={18} className="text-gray-300" />
+                  )}
+                </span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => navigate({ to: "/track" })}
@@ -268,6 +306,22 @@ export default function Navbar() {
                   <LogIn size={14} /> Login
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  toggleTheme();
+                  setMenuOpen(false);
+                }}
+                className="flex items-center gap-2 hover:text-[#FED100] w-full"
+                data-ocid="mobile_nav.theme.toggle"
+              >
+                {isDark ? (
+                  <Sun size={14} className="text-[#FED100]" />
+                ) : (
+                  <Moon size={14} />
+                )}{" "}
+                {isDark ? "Light Mode" : "Dark Mode"}
+              </button>
             </div>
           )}
         </nav>

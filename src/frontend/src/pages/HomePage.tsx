@@ -7,10 +7,13 @@ import {
   Truck,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import CustomFrameModal from "../components/CustomFrameModal";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import OwnerShowcase from "../components/OwnerShowcase";
 import ProductCard from "../components/ProductCard";
 import { useData } from "../lib/DataContext";
+import { playClick } from "../lib/sounds";
 
 const FALLBACK_TESTIMONIALS = [
   {
@@ -46,13 +49,13 @@ export default function HomePage() {
   const [bannerIdx, setBannerIdx] = useState(0);
   const [slideIdx, setSlideIdx] = useState(0);
   const [countdown, setCountdown] = useState({ h: 2, m: 45, s: 18 });
+  const [customFrameOpen, setCustomFrameOpen] = useState(false);
   const navigate = useNavigate();
   const bannerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const slideRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isDark = settings.theme === "dark";
 
   const bg = isDark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]";
-  const heroSectionBg = isDark ? "bg-[#212121]" : "bg-[#212121]";
   const tileBg = isDark ? "bg-[#2a2c2a]" : "bg-[#333533]";
   const text = isDark ? "text-white" : "text-[#212121]";
   const subText = isDark ? "text-gray-400" : "text-[#555]";
@@ -67,7 +70,6 @@ export default function HomePage() {
     };
   }, [settings.bannersEnabled, settings.bannerTexts.length]);
 
-  // Slideshow interval
   const slides = settings.heroSlideshow || [];
   const slideshowActive = settings.heroSlideshowEnabled && slides.length > 0;
   const slideInterval = settings.heroSlideshowInterval || 4000;
@@ -108,7 +110,6 @@ export default function HomePage() {
   }, []);
 
   const products = allProducts.filter((p) => p.active);
-  // Use admin-defined categories; fallback to product-derived ones if settings.categories is empty
   const adminCats =
     settings.categories && settings.categories.length > 0
       ? settings.categories
@@ -126,7 +127,6 @@ export default function HomePage() {
     (b) => b.type === "midpage" && b.active,
   );
 
-  // Reviews: use dynamic reviews if any active exist, else fallback
   const activeReviews = reviews.filter((r) => r.active);
   const displayReviews =
     activeReviews.length > 0
@@ -155,7 +155,7 @@ export default function HomePage() {
       {/* Hero Ad Banner */}
       {heroAdBanner && (
         <div
-          className="text-center py-3 px-4 font-semibold text-sm cursor-pointer hover:opacity-90 transition-opacity"
+          className="text-center py-3 px-4 font-semibold text-sm"
           style={{
             backgroundColor: heroAdBanner.bgColor,
             color: heroAdBanner.textColor,
@@ -167,12 +167,12 @@ export default function HomePage() {
 
       {/* Hero */}
       <section
-        className={`${heroSectionBg} text-white relative overflow-hidden`}
-        style={{ minHeight: "420px" }}
+        className="bg-[#212121] text-white relative"
+        style={{ height: "60vh", minHeight: "300px", maxHeight: "600px" }}
       >
-        {/* Slideshow background */}
-        {slideshowActive && (
-          <div className="absolute inset-0 overflow-hidden">
+        {/* Slideshow background — fixed coverage, no cropping */}
+        {slideshowActive ? (
+          <div className="absolute inset-0" style={{ overflow: "hidden" }}>
             {slideTransition === "crossfade" ? (
               slides.map((slide, i) => (
                 <div
@@ -187,14 +187,20 @@ export default function HomePage() {
                   <img
                     src={slide.image}
                     alt={slide.caption || `Slide ${i + 1}`}
-                    className="w-full h-full object-cover"
-                    style={{ display: "block" }}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "center",
+                      display: "block",
+                    }}
                   />
                   <div className="absolute inset-0 bg-black/50" />
                 </div>
               ))
             ) : (
-              /* Slide transition: left-to-right (new slide comes from right) */
               <div
                 className="absolute inset-0 flex"
                 style={{
@@ -208,13 +214,20 @@ export default function HomePage() {
                   <div
                     key={slide.id}
                     className="relative flex-shrink-0"
-                    style={{ width: `${100 / slides.length}%` }}
+                    style={{ width: `${100 / slides.length}%`, height: "100%" }}
                   >
                     <img
                       src={slide.image}
                       alt={slide.caption || `Slide ${i + 1}`}
-                      className="w-full h-full object-cover"
-                      style={{ display: "block" }}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                        display: "block",
+                      }}
                     />
                     <div className="absolute inset-0 bg-black/50" />
                   </div>
@@ -228,24 +241,22 @@ export default function HomePage() {
                   key={slide.id}
                   type="button"
                   onClick={() => setSlideIdx(i)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    i === slideIdx
-                      ? "bg-[#FED100] w-4"
-                      : "w-2 bg-white/50 hover:bg-white/80"
-                  }`}
+                  className={`h-2 rounded-full transition-all duration-300 ${i === slideIdx ? "bg-[#FED100] w-4" : "w-2 bg-white/50 hover:bg-white/80"}`}
                   aria-label={`Go to slide ${i + 1}`}
                 />
               ))}
             </div>
           </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#212121] to-[#333533]" />
         )}
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
-          <div className="flex-1">
+        <div className="relative z-10 h-full flex items-center">
+          <div className="max-w-7xl mx-auto px-4 w-full py-8">
             <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-3">
               {settings.heroBadgeText || "Premium Photo Frames"}
             </p>
-            <h1 className="font-playfair text-4xl md:text-6xl font-bold leading-tight mb-4">
+            <h1 className="font-playfair text-4xl md:text-5xl font-bold leading-tight mb-4">
               {settings.heroHeading || "Transform Your"}
               <br />
               <span className="text-[#FED100]">
@@ -253,7 +264,7 @@ export default function HomePage() {
               </span>{" "}
               Into Art
             </h1>
-            <p className="text-gray-300 text-lg mb-8 max-w-md">
+            <p className="text-gray-300 text-base md:text-lg mb-6 max-w-md">
               {settings.heroSubtext ||
                 "High quality photo frames, collages & more. Delivered to your doorstep in just 3-4 days."}
             </p>
@@ -265,24 +276,21 @@ export default function HomePage() {
                     .getElementById("products")
                     ?.scrollIntoView({ behavior: "smooth" })
                 }
-                className="bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold px-8 py-3 rounded-lg transition-colors uppercase tracking-wide text-sm"
+                className="bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold px-7 py-3 rounded-lg transition-colors uppercase tracking-wide text-sm"
               >
-                {settings.heroCtaText || "Shop Custom Frames"}
+                Shop Regular Frames
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  document
-                    .getElementById("how-it-works")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="border border-gray-500 text-white hover:border-[#FED100] hover:text-[#FED100] font-semibold px-8 py-3 rounded-lg transition-colors uppercase tracking-wide text-sm"
+                onClick={() => setCustomFrameOpen(true)}
+                className="border border-[#FED100] text-[#FED100] hover:bg-[#FED100]/10 font-semibold px-7 py-3 rounded-lg transition-colors text-sm"
+                data-ocid="hero.custom_frame.button"
               >
-                How It Works
+                🗒️ Order Custom Size
               </button>
             </div>
             {todayOrderCount > 0 && (
-              <div className="mt-5 flex items-center gap-2">
+              <div className="mt-4 flex items-center gap-2">
                 <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
                 <span className="text-sm text-white/80">
                   <strong className="text-[#FED100]">{todayOrderCount}</strong>{" "}
@@ -295,7 +303,7 @@ export default function HomePage() {
       </section>
 
       {/* Feature tiles */}
-      <section className={`${tileBg}`}>
+      <section className={tileBg}>
         <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             {
@@ -351,11 +359,7 @@ export default function HomePage() {
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors capitalize ${
                 filter === f
                   ? "bg-[#FED100] text-[#212121] font-bold"
-                  : `${
-                      isDark
-                        ? "bg-[#2a2c2a] text-gray-300 border border-[#444]"
-                        : "bg-white text-[#333533] border border-[#D6D6D6]"
-                    } hover:border-[#FED100]`
+                  : `${isDark ? "bg-[#2a2c2a] text-gray-300 border border-[#444]" : "bg-white text-[#333533] border border-[#D6D6D6]"} hover:border-[#FED100]`
               }`}
             >
               {f === "all"
@@ -369,6 +373,104 @@ export default function HomePage() {
           {filtered.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
+        </div>
+      </section>
+
+      {/* Custom Frame Section */}
+      <section className={`${isDark ? "bg-[#1e1e1e]" : "bg-white"} py-12`}>
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-2">
+              What Would You Like?
+            </p>
+            <h2 className={`font-playfair text-3xl font-bold ${text}`}>
+              Choose Your Frame Type
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Regular Frames Card */}
+            <div
+              className={`rounded-2xl border-2 p-8 flex flex-col items-center text-center ${
+                isDark
+                  ? "border-[#333] bg-[#252525]"
+                  : "border-[#D6D6D6] bg-[#f9f9f9]"
+              }`}
+            >
+              <div className="text-5xl mb-4">🖼️</div>
+              <h3 className={`font-playfair text-2xl font-bold ${text} mb-2`}>
+                Our Regular Frames
+              </h3>
+              <p className={`${subText} text-sm mb-6`}>
+                Browse our curated collection of premium photo frames in
+                standard sizes. Fast delivery, quality guaranteed.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 mb-6">
+                {["4×6 inch", "5×7 inch", "A4", "12×16 inch", "18×24 inch"].map(
+                  (s) => (
+                    <span
+                      key={s}
+                      className="text-xs bg-[#FED100]/20 text-[#7a6600] font-medium px-3 py-1 rounded-full"
+                    >
+                      {s}
+                    </span>
+                  ),
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  document
+                    .getElementById("products")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="w-full bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold py-3.5 rounded-xl transition-colors text-sm uppercase tracking-wide"
+                data-ocid="home.shop_regular.button"
+              >
+                🛒 Shop Regular Frames
+              </button>
+            </div>
+
+            {/* Custom Frame Card */}
+            <div
+              className={`rounded-2xl border-2 p-8 flex flex-col items-center text-center ${
+                isDark
+                  ? "border-[#FED100]/30 bg-[#252525]"
+                  : "border-[#FED100]/40 bg-[#fffef0]"
+              }`}
+            >
+              <div className="text-5xl mb-4">🗒️</div>
+              <h3 className={`font-playfair text-2xl font-bold ${text} mb-2`}>
+                Custom Size Frame
+              </h3>
+              <p className={`${subText} text-sm mb-6`}>
+                Don't see your size? Order any dimension with your choice of
+                wood material, design, and style. Fully personalised.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 mb-6">
+                {[
+                  "Any Size",
+                  "cm / inch / ft",
+                  "Premium Wood",
+                  "Your Style",
+                ].map((s) => (
+                  <span
+                    key={s}
+                    className="text-xs bg-[#212121]/10 text-[#333] font-medium px-3 py-1 rounded-full"
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCustomFrameOpen(true)}
+                className="w-full border-2 border-[#FED100] text-[#212121] bg-white hover:bg-[#FED100]/10 font-bold py-3.5 rounded-xl transition-colors text-sm uppercase tracking-wide"
+                data-ocid="custom_frame.open_modal_button"
+              >
+                🗒️ Order Custom Size
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -396,7 +498,6 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Dynamic mid-page ad from advanced banners */}
       {midPageAd && (
         <div
           className="py-4 px-4 text-center font-semibold text-sm"
@@ -410,16 +511,18 @@ export default function HomePage() {
       )}
 
       {/* Urgency band */}
-      <section className="bg-[#212121] text-white py-5">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-lg font-semibold">
-            ⏰ Flash Sale ends in:{" "}
-            <span className="text-[#FED100] font-mono">
-              {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
-            </span>
-          </p>
-        </div>
-      </section>
+      {settings.offerTimerEnabled !== false && (
+        <section className="bg-[#212121] text-white py-5">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <p className="text-lg font-semibold">
+              ⏰ {settings.offerTimerText || "Flash Sale ends in:"}{" "}
+              <span className="text-[#FED100] font-mono">
+                {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
+              </span>
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* How it works */}
       <section
@@ -499,11 +602,7 @@ export default function HomePage() {
             return (
               <div
                 key={reviewKey}
-                className={`${
-                  isDark
-                    ? "bg-[#2a2c2a] border-[#444]"
-                    : "bg-white border-[#D6D6D6]"
-                } rounded-xl p-6 shadow-sm border`}
+                className={`${isDark ? "bg-[#2a2c2a] border-[#444]" : "bg-white border-[#D6D6D6]"} rounded-xl p-6 shadow-sm border`}
               >
                 <div className="flex gap-1 mb-3">
                   {Array.from({ length: t.rating }, (_, i) => i + 1).map(
@@ -515,9 +614,7 @@ export default function HomePage() {
                   )}
                 </div>
                 <p
-                  className={`${
-                    isDark ? "text-gray-300" : "text-[#333533]"
-                  } text-sm leading-relaxed mb-4`}
+                  className={`${isDark ? "text-gray-300" : "text-[#333533]"} text-sm leading-relaxed mb-4`}
                 >
                   &ldquo;{t.text}&rdquo;
                 </p>
@@ -547,6 +644,40 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Our Work Gallery */}
+      {(settings as any).ourWorkPhotos &&
+        (settings as any).ourWorkPhotos.length > 0 && (
+          <section
+            className="py-14 max-w-7xl mx-auto px-4"
+            data-ocid="home.our_work.section"
+          >
+            <div className="text-center mb-8">
+              <h2 className="font-playfair text-3xl font-bold text-[#212121]">
+                Our Work
+              </h2>
+              <p className="text-gray-500 mt-2">Real frames, real memories</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {((settings as any).ourWorkPhotos as string[]).map(
+                (photo: string, idx: number) => (
+                  <div
+                    key={String(idx)}
+                    className="rounded-2xl overflow-hidden border border-[#D6D6D6] shadow-sm aspect-square hover:shadow-md transition-shadow"
+                  >
+                    <img
+                      src={photo}
+                      alt="Our work"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ),
+              )}
+            </div>
+          </section>
+        )}
+
+      <OwnerShowcase />
+
       {/* Track CTA */}
       <section className="bg-[#FED100] py-10">
         <div className="max-w-7xl mx-auto px-4 text-center">
@@ -567,6 +698,12 @@ export default function HomePage() {
       </section>
 
       <Footer />
+
+      {/* Custom Frame Modal */}
+      <CustomFrameModal
+        open={customFrameOpen}
+        onClose={() => setCustomFrameOpen(false)}
+      />
     </div>
   );
 }

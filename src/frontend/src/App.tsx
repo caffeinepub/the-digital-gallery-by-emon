@@ -5,7 +5,10 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { useState } from "react";
+import LoadingScreen from "./components/LoadingScreen";
 import { DataProvider } from "./lib/DataContext";
+import { getSettings } from "./lib/data";
 import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
 import CartPage from "./pages/CartPage";
@@ -83,9 +86,28 @@ declare module "@tanstack/react-router" {
   }
 }
 
+const hasLoaded =
+  typeof sessionStorage !== "undefined" &&
+  sessionStorage.getItem("tdg_loaded") === "1";
+
 export default function App() {
+  const [showLoading, setShowLoading] = useState(!hasLoaded);
+  const settings = getSettings();
+
+  function handleLoadDone() {
+    sessionStorage.setItem("tdg_loaded", "1");
+    setShowLoading(false);
+  }
+
   return (
     <DataProvider>
+      {showLoading && (
+        <LoadingScreen
+          onDone={handleLoadDone}
+          logoImage={settings.logoImage}
+          storeName={settings.storeName}
+        />
+      )}
       <RouterProvider router={router} />
       <Toaster richColors position="top-center" />
     </DataProvider>

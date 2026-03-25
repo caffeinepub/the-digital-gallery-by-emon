@@ -12,6 +12,7 @@ export interface Product {
   description: string;
   image?: string; // base64 data URL (legacy, first image)
   images?: string[]; // up to 5 base64 data URLs
+  highlights?: string[];
 }
 
 export interface CartItem {
@@ -22,6 +23,7 @@ export interface CartItem {
   mrp: number;
   quantity: number;
   image?: string;
+  frameColour?: string;
 }
 
 export interface CustomerSession {
@@ -70,6 +72,7 @@ export interface Order {
   createdAt: string;
   cancelledAt?: string;
   notes: string;
+  frameColour?: string;
 }
 
 export interface FinanceRecord {
@@ -115,6 +118,14 @@ export interface Review {
   active: boolean;
 }
 
+export interface FrameOption {
+  id: string;
+  name: string;
+  image?: string;
+  addonPrice?: number;
+  blackWhiteIncompatible?: boolean;
+}
+
 export interface Settings {
   storeName: string;
   adminPassword: string;
@@ -128,6 +139,7 @@ export interface Settings {
   popupText: string;
   popupSubtext: string;
   popupCode: string;
+  popupImage?: string;
   bannersEnabled: boolean;
   bannerTexts: string[];
   advancedBanners: Banner[];
@@ -173,6 +185,17 @@ export interface Settings {
     businessYoutube: string;
     businessWhatsapp: string;
   };
+  offerTimerEnabled?: boolean;
+  offerTimerText?: string;
+  frameWoodOptions?: FrameOption[];
+  frameDesignOptions?: FrameOption[];
+  frameStyleOptions?: FrameOption[];
+  framePrintingOptions?: FrameOption[];
+  frameColourOptions?: FrameOption[];
+  ourWorkPhotos?: string[];
+  customFrameBaseRateCm?: number;
+  customFrameBaseRateInch?: number;
+  customFrameBaseRateFt?: number;
 }
 
 const DEFAULT_PRODUCTS: Product[] = [
@@ -411,6 +434,7 @@ const DEFAULT_SETTINGS: Settings = {
   popupText: "30% OFF ON ALL COLLAGES",
   popupSubtext: "Limited time offer. Grab it now!",
   popupCode: "TDGSALE25",
+  popupImage: undefined,
   bannersEnabled: true,
   bannerTexts: [
     "🎉 30% OFF on all Collages | Code: TDGSALE25",
@@ -521,6 +545,44 @@ const DEFAULT_SETTINGS: Settings = {
     businessYoutube: "",
     businessWhatsapp: "",
   },
+  offerTimerEnabled: true,
+  offerTimerText: "Flash Sale ends in:",
+  frameWoodOptions: [
+    { id: "fw1", name: "Teak", addonPrice: 200 },
+    { id: "fw2", name: "Mango", addonPrice: 150 },
+    { id: "fw3", name: "Pine", addonPrice: 100 },
+    { id: "fw4", name: "MDF", addonPrice: 0 },
+    { id: "fw5", name: "Bamboo", addonPrice: 120 },
+  ],
+  frameDesignOptions: [
+    { id: "fd1", name: "Classic", addonPrice: 0 },
+    { id: "fd2", name: "Modern", addonPrice: 50 },
+    { id: "fd3", name: "Rustic", addonPrice: 80 },
+    { id: "fd4", name: "Royal", addonPrice: 150 },
+    { id: "fd5", name: "Minimal", addonPrice: 30 },
+  ],
+  frameStyleOptions: [
+    { id: "fs1", name: "Single Border", addonPrice: 0 },
+    { id: "fs2", name: "Double Border", addonPrice: 50 },
+    { id: "fs3", name: "Shadow Box", addonPrice: 100 },
+    { id: "fs4", name: "Floating", addonPrice: 80 },
+    { id: "fs5", name: "Ornate", addonPrice: 120 },
+  ],
+  framePrintingOptions: [
+    { id: "fp1", name: "Matte Print", addonPrice: 200 },
+    { id: "fp2", name: "Glossy Print", addonPrice: 250 },
+    { id: "fp3", name: "Canvas Print", addonPrice: 350 },
+  ],
+  frameColourOptions: [
+    { id: "fc1", name: "Natural Brown", addonPrice: 0 },
+    { id: "fc2", name: "Black / White", addonPrice: 0 },
+    { id: "fc3", name: "Golden", addonPrice: 50 },
+    { id: "fc4", name: "Matte Black", addonPrice: 30 },
+  ],
+  ourWorkPhotos: [],
+  customFrameBaseRateCm: 3,
+  customFrameBaseRateInch: 50,
+  customFrameBaseRateFt: 500,
 };
 
 export function getProducts(): Product[] {
@@ -537,7 +599,13 @@ export function getProducts(): Product[] {
 }
 
 export function saveProducts(products: Product[]) {
-  localStorage.setItem("tdg_products", JSON.stringify(products));
+  try {
+    localStorage.setItem("tdg_products", JSON.stringify(products));
+  } catch (_e) {
+    alert(
+      "Storage full: images are too large. Please use smaller photos (under 200KB each) or remove some product images.",
+    );
+  }
 }
 
 export function getOrders(): Order[] {
