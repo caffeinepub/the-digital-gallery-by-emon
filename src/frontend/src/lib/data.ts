@@ -429,7 +429,7 @@ const DEFAULT_PRODUCTS: Product[] = [
   },
 ];
 
-const DEFAULT_SETTINGS: Settings = {
+export const DEFAULT_SETTINGS: Settings = {
   storeName: "The Digital Gallery by Emon",
   adminPassword: "Emon2026",
   whatsapp: "9365246096",
@@ -591,6 +591,9 @@ const DEFAULT_SETTINGS: Settings = {
   customFrameBaseRateCm: 3,
   customFrameBaseRateInch: 50,
   customFrameBaseRateFt: 500,
+  orderConfirmationMessage:
+    "Thank you for your order! We will start working on your frame shortly. Please send us your photo via WhatsApp.",
+  footerBgImage: undefined,
   colorBg: "#f5f5f5",
   colorDark: "#212121",
   colorMedium: "#333533",
@@ -607,7 +610,13 @@ export function getProducts(): Product[] {
     return DEFAULT_PRODUCTS;
   }
   const raw = localStorage.getItem("tdg_products");
-  if (raw) return JSON.parse(raw);
+  if (raw) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return DEFAULT_PRODUCTS;
+    }
+  }
   localStorage.setItem("tdg_products", JSON.stringify(DEFAULT_PRODUCTS));
   return DEFAULT_PRODUCTS;
 }
@@ -623,8 +632,12 @@ export function saveProducts(products: Product[]) {
 }
 
 export function getOrders(): Order[] {
-  const raw = localStorage.getItem("tdg_orders");
-  return raw ? JSON.parse(raw) : [];
+  try {
+    const raw = localStorage.getItem("tdg_orders");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function saveOrders(orders: Order[]) {
@@ -645,8 +658,12 @@ export function addOrder(order: Omit<Order, "id" | "createdAt">): Order {
 }
 
 export function getFinance(): FinanceRecord[] {
-  const raw = localStorage.getItem("tdg_finance");
-  return raw ? JSON.parse(raw) : [];
+  try {
+    const raw = localStorage.getItem("tdg_finance");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function saveFinance(records: FinanceRecord[]) {
@@ -654,8 +671,12 @@ export function saveFinance(records: FinanceRecord[]) {
 }
 
 export function getSuppliers(): Supplier[] {
-  const raw = localStorage.getItem("tdg_suppliers");
-  return raw ? JSON.parse(raw) : [];
+  try {
+    const raw = localStorage.getItem("tdg_suppliers");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function saveSuppliers(suppliers: Supplier[]) {
@@ -663,10 +684,64 @@ export function saveSuppliers(suppliers: Supplier[]) {
 }
 
 export function getSettings(): Settings {
-  const raw = localStorage.getItem("tdg_settings");
-  if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+  try {
+    const raw = localStorage.getItem("tdg_settings");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Deep-merge nested objects so new fields in DEFAULT_SETTINGS are preserved
+      // even when older stored settings don't have them
+      return {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        // Deep merge aboutMe so new social handle fields are not lost
+        aboutMe: {
+          ...DEFAULT_SETTINGS.aboutMe,
+          ...(parsed.aboutMe || {}),
+        },
+        // Ensure arrays always have defaults
+        bannerTexts: Array.isArray(parsed.bannerTexts)
+          ? parsed.bannerTexts
+          : DEFAULT_SETTINGS.bannerTexts,
+        advancedBanners: Array.isArray(parsed.advancedBanners)
+          ? parsed.advancedBanners
+          : DEFAULT_SETTINGS.advancedBanners,
+        categories: Array.isArray(parsed.categories)
+          ? parsed.categories
+          : DEFAULT_SETTINGS.categories,
+        pickupCities: Array.isArray(parsed.pickupCities)
+          ? parsed.pickupCities
+          : DEFAULT_SETTINGS.pickupCities,
+        deliveryLocations: Array.isArray(parsed.deliveryLocations)
+          ? parsed.deliveryLocations
+          : DEFAULT_SETTINGS.deliveryLocations,
+        heroSlideshow: Array.isArray(parsed.heroSlideshow)
+          ? parsed.heroSlideshow
+          : DEFAULT_SETTINGS.heroSlideshow,
+        frameWoodOptions: Array.isArray(parsed.frameWoodOptions)
+          ? parsed.frameWoodOptions
+          : DEFAULT_SETTINGS.frameWoodOptions,
+        frameDesignOptions: Array.isArray(parsed.frameDesignOptions)
+          ? parsed.frameDesignOptions
+          : DEFAULT_SETTINGS.frameDesignOptions,
+        frameStyleOptions: Array.isArray(parsed.frameStyleOptions)
+          ? parsed.frameStyleOptions
+          : DEFAULT_SETTINGS.frameStyleOptions,
+        framePrintingOptions: Array.isArray(parsed.framePrintingOptions)
+          ? parsed.framePrintingOptions
+          : DEFAULT_SETTINGS.framePrintingOptions,
+        frameColourOptions: Array.isArray(parsed.frameColourOptions)
+          ? parsed.frameColourOptions
+          : DEFAULT_SETTINGS.frameColourOptions,
+        ourWorkPhotos: Array.isArray(parsed.ourWorkPhotos)
+          ? parsed.ourWorkPhotos
+          : DEFAULT_SETTINGS.ourWorkPhotos,
+      };
+    }
+  } catch (e) {
+    console.error("[TDG] Failed to parse settings, using defaults:", e);
+  }
   localStorage.setItem("tdg_settings", JSON.stringify(DEFAULT_SETTINGS));
-  return DEFAULT_SETTINGS;
+  return { ...DEFAULT_SETTINGS };
 }
 
 export function saveSettings(settings: Settings) {
@@ -674,8 +749,12 @@ export function saveSettings(settings: Settings) {
 }
 
 export function getReviews(): Review[] {
-  const raw = localStorage.getItem("tdg_reviews");
-  return raw ? JSON.parse(raw) : [];
+  try {
+    const raw = localStorage.getItem("tdg_reviews");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function saveReviews(reviews: Review[]) {
@@ -684,8 +763,12 @@ export function saveReviews(reviews: Review[]) {
 
 // Cart helpers
 export function getCart(): CartItem[] {
-  const raw = localStorage.getItem("tdg_cart");
-  return raw ? JSON.parse(raw) : [];
+  try {
+    const raw = localStorage.getItem("tdg_cart");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function saveCart(items: CartItem[]) {
@@ -698,8 +781,12 @@ export function clearCart() {
 
 // Customer session
 export function getCustomerSession(): CustomerSession | null {
-  const raw = localStorage.getItem("tdg_customer");
-  return raw ? JSON.parse(raw) : null;
+  try {
+    const raw = localStorage.getItem("tdg_customer");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function saveCustomerSession(session: CustomerSession) {

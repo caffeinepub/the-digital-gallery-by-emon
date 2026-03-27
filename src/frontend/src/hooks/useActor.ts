@@ -26,11 +26,19 @@ export function useActor() {
       };
 
       const actor = await createActorWithConfig(actorOptions);
+      const adminToken = getSecretParameter("caffeineAdminToken") || "";
+      // Guard: only call if the method exists on the actor (not all IDLs include it)
       try {
-        const adminToken = getSecretParameter("caffeineAdminToken") || "";
-        await actor._initializeAccessControlWithSecret(adminToken);
-      } catch {
-        // Authorization mixin may not be available or already initialized — ignore
+        const initFn = (actor as any)._initializeAccessControlWithSecret;
+        if (typeof initFn === "function") {
+          await initFn.call(actor, adminToken);
+        }
+      } catch (e) {
+        // Non-fatal — continue with the actor even if this fails
+        console.warn(
+          "[TDG] _initializeAccessControlWithSecret not available:",
+          e,
+        );
       }
       return actor;
     },
