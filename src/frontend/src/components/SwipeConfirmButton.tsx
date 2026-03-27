@@ -123,7 +123,7 @@ export default function SwipeConfirmButton({
       {/* Thumb */}
       {!confirmed && (
         <div
-          className="absolute top-2 bottom-2 rounded-xl bg-[#212121] flex items-center justify-center shadow-lg touch-none"
+          className="absolute top-2 bottom-2 rounded-xl bg-[var(--tdg-dark)] flex items-center justify-center shadow-lg touch-none"
           style={{
             width: THUMB_W,
             left: thumbPx,
@@ -140,7 +140,7 @@ export default function SwipeConfirmButton({
           <svg
             viewBox="0 0 24 24"
             fill="none"
-            className="w-6 h-6 text-[#FED100]"
+            className="w-6 h-6 text-[var(--tdg-amber)]"
             stroke="currentColor"
             strokeWidth="2.5"
             aria-hidden="true"

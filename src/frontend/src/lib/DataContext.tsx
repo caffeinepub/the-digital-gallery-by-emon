@@ -6,6 +6,12 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useActor } from "../hooks/useActor";
+import {
+  type BackendActorWithOrders,
+  getBackendActor,
+  orderFromBackend,
+} from "./backendOrders";
 import {
   type CartItem,
   type CustomerSession,
@@ -54,6 +60,8 @@ interface DataContextType {
   setCustomerSession: (session: CustomerSession | null) => void;
   addOrderToStore: (order: Order) => void;
   refresh: () => void;
+  backendActor: BackendActorWithOrders | null;
+  refreshOrdersFromBackend: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -73,6 +81,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [customerSession, setCustomerSessionState] =
     useState<CustomerSession | null>(() => getCustomerSession());
 
+  const { actor, isFetching } = useActor();
+  const backendActor = getBackendActor(actor);
+
+  // Load all orders from backend on mount / actor change
+  useEffect(() => {
+    if (!actor || isFetching) return;
+    const ba = getBackendActor(actor);
+    if (!ba) return;
+    ba.getOrders()
+      .then((backendOrders) => {
+        const converted = backendOrders.map(orderFromBackend);
+        setOrdersState(converted);
+        saveOrders(converted);
+      })
+      .catch((err) => {
+        console.error(
+          "Failed to load orders from backend, using localStorage:",
+          err,
+        );
+      });
+  }, [actor, isFetching]);
+
   useEffect(() => {
     function onStorage(e: StorageEvent) {
       if (e.key === "tdg_products") setProductsState(getProducts());
@@ -88,6 +118,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  // Apply brand colors as CSS variables whenever settings change
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--tdg-bg", settings.colorBg || "#f5f5f5");
+    root.style.setProperty("--tdg-dark", settings.colorDark || "#212121");
+    root.style.setProperty("--tdg-medium", settings.colorMedium || "#333533");
+    root.style.setProperty("--tdg-light", settings.colorLight || "#D6D6D6");
+    root.style.setProperty("--tdg-amber", settings.colorAmber || "#FED100");
+    root.style.setProperty("--tdg-yellow", settings.colorYellow || "#FFEE32");
+  }, [settings]);
 
   const setProducts = useCallback((p: Product[]) => {
     saveProducts(p);
@@ -145,6 +186,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const refreshOrdersFromBackend = useCallback(async () => {
+    if (!actor) return;
+    const ba = getBackendActor(actor);
+    if (!ba) return;
+    try {
+      const backendOrders = await ba.getOrders();
+      const converted = backendOrders.map(orderFromBackend);
+      setOrdersState(converted);
+      saveOrders(converted);
+    } catch (err) {
+      console.error("Failed to refresh orders from backend:", err);
+    }
+  }, [actor]);
+
   const refresh = useCallback(() => {
     setProductsState(getProducts());
     setOrdersState(getOrders());
@@ -177,6 +232,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setCustomerSession,
         addOrderToStore,
         refresh,
+        backendActor,
+        refreshOrdersFromBackend,
       }}
     >
       {children}

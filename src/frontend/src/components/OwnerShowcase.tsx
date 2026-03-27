@@ -53,19 +53,19 @@ export default function OwnerShowcase() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="bg-white rounded-3xl border border-[#D6D6D6] shadow-lg overflow-hidden"
+        className="bg-white rounded-3xl border border-[var(--tdg-light)] shadow-lg overflow-hidden"
       >
         <div className="grid md:grid-cols-[280px_1fr] gap-0">
           {/* Left — photo panel */}
-          <div className="bg-[#212121] flex flex-col items-center justify-center p-10 gap-4">
+          <div className="bg-[var(--tdg-dark)] flex flex-col items-center justify-center p-10 gap-4">
             {profileSrc ? (
               <img
                 src={profileSrc}
                 alt={name}
-                className="w-36 h-36 rounded-full object-cover border-4 border-[#FED100] shadow-xl"
+                className="w-36 h-36 rounded-full object-cover border-4 border-[var(--tdg-amber)] shadow-xl"
               />
             ) : (
-              <div className="w-36 h-36 rounded-full bg-[#333533] border-4 border-[#FED100] flex items-center justify-center text-[#FED100] font-bold text-4xl font-playfair shadow-xl">
+              <div className="w-36 h-36 rounded-full bg-[#333533] border-4 border-[var(--tdg-amber)] flex items-center justify-center text-[var(--tdg-amber)] font-bold text-4xl font-playfair shadow-xl">
                 E
               </div>
             )}
@@ -73,7 +73,7 @@ export default function OwnerShowcase() {
               <p className="font-playfair text-xl font-bold text-white">
                 {name}
               </p>
-              <p className="text-[#FED100] text-sm font-medium mt-0.5">
+              <p className="text-[var(--tdg-amber)] text-sm font-medium mt-0.5">
                 {title}
               </p>
             </div>
@@ -99,12 +99,12 @@ export default function OwnerShowcase() {
           {/* Right — bio */}
           <div className="p-8 md:p-10 flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-1 bg-[#FED100] rounded-full" />
+              <div className="w-8 h-1 bg-[var(--tdg-amber)] rounded-full" />
               <span className="text-xs font-bold uppercase tracking-widest text-[#b38b00]">
                 Meet the Artist
               </span>
             </div>
-            <h2 className="font-playfair text-2xl md:text-3xl font-bold text-[#212121] mb-3">
+            <h2 className="font-playfair text-2xl md:text-3xl font-bold text-[var(--tdg-dark)] mb-3">
               The Craft Behind Every Frame
             </h2>
             {me?.bio && (

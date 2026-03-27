@@ -95,7 +95,7 @@ export default function CustomerLoginModal({
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="font-bold text-lg text-[#212121] font-playfair">
+            <h2 className="font-bold text-lg text-[var(--tdg-dark)] font-playfair">
               {step === 1 ? "Login to Your Account" : "Quick Verification"}
             </h2>
             {step === 2 && (
@@ -135,7 +135,7 @@ export default function CustomerLoginModal({
                 onKeyDown={(e) => e.key === "Enter" && proceedToStep2()}
                 placeholder="e.g. Priya Sharma"
                 data-ocid="customer_login.name.input"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#FED100]"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
               />
             </div>
             <div>
@@ -155,7 +155,7 @@ export default function CustomerLoginModal({
                 onKeyDown={(e) => e.key === "Enter" && proceedToStep2()}
                 placeholder="10-digit mobile number"
                 data-ocid="customer_login.phone.input"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#FED100]"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
               />
             </div>
             {error && (
@@ -170,7 +170,7 @@ export default function CustomerLoginModal({
               type="button"
               onClick={proceedToStep2}
               data-ocid="customer_login.continue.button"
-              className="w-full bg-[#FED100] text-[#212121] font-bold py-3 rounded-lg hover:bg-[#e6bc00] transition-colors"
+              className="w-full bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold py-3 rounded-lg hover:bg-[#e6bc00] transition-colors"
             >
               Continue
             </button>
@@ -183,11 +183,11 @@ export default function CustomerLoginModal({
         {/* Step 2: CAPTCHA verification */}
         {step === 2 && (
           <div className="space-y-4">
-            <div className="bg-[#FED100]/10 border border-[#FED100]/40 rounded-xl p-4 text-center">
+            <div className="bg-[var(--tdg-amber)]/10 border border-[var(--tdg-amber)]/40 rounded-xl p-4 text-center">
               <p className="text-xs text-gray-500 mb-1">
                 Solve this to continue
               </p>
-              <p className="text-2xl font-bold text-[#212121]">
+              <p className="text-2xl font-bold text-[var(--tdg-dark)]">
                 {captchaQuestion?.q}
               </p>
             </div>
@@ -210,7 +210,7 @@ export default function CustomerLoginModal({
                 onKeyDown={(e) => e.key === "Enter" && verifyCaptcha()}
                 placeholder="Type the answer"
                 data-ocid="customer_login.captcha.input"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#FED100] focus:ring-2 focus:ring-[#FED100]/20 text-center text-xl font-bold"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)] focus:ring-2 focus:ring-[var(--tdg-amber)]/20 text-center text-xl font-bold"
               />
             </div>
 
@@ -230,7 +230,7 @@ export default function CustomerLoginModal({
                 verifyCaptcha();
               }}
               data-ocid="customer_login.verify_captcha.button"
-              className="w-full bg-[#FED100] text-[#212121] font-bold py-3 rounded-lg hover:bg-[#e6bc00] transition-colors"
+              className="w-full bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold py-3 rounded-lg hover:bg-[#e6bc00] transition-colors"
             >
               Verify &amp; Login
             </button>

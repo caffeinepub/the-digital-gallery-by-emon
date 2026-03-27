@@ -58,7 +58,9 @@ export default function LoadingScreen({
                   "tdg-scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
               }}
             >
-              <span className="font-bold text-3xl text-[#212121]">TDG</span>
+              <span className="font-bold text-3xl text-[var(--tdg-dark)]">
+                TDG
+              </span>
             </div>
           )}
         </div>
@@ -71,7 +73,7 @@ export default function LoadingScreen({
           <span className="text-4xl" role="img" aria-label="gift">
             🎁
           </span>
-          <span className="text-3xl text-[#D6D6D6]">✦</span>
+          <span className="text-3xl text-[var(--tdg-light)]">✦</span>
           <span className="text-4xl" role="img" aria-label="frame">
             🖼️
           </span>
@@ -79,7 +81,7 @@ export default function LoadingScreen({
 
         {/* Tagline */}
         <p
-          className="font-semibold text-[#212121] text-lg tracking-wide text-center px-4"
+          className="font-semibold text-[var(--tdg-dark)] text-lg tracking-wide text-center px-4"
           style={{ animation: "tdg-fadein 0.6s 0.5s ease both" }}
         >
           {storeName || "The Digital Gallery by Emon"}

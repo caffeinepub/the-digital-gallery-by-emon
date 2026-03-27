@@ -50,7 +50,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-[#D6D6D6] shadow-sm hover:shadow-md transition-shadow group overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl border border-[var(--tdg-light)] shadow-sm hover:shadow-md transition-shadow group overflow-hidden flex flex-col">
       <button
         type="button"
         className="relative w-full"
@@ -80,7 +80,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
           <div className="absolute top-2 left-2">
-            <span className="bg-[#FFEE32] text-[#212121] text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="bg-[var(--tdg-yellow)] text-[var(--tdg-dark)] text-xs px-2 py-0.5 rounded-full font-bold">
               {Math.round((save / product.mrp) * 100)}% OFF
             </span>
           </div>
@@ -100,7 +100,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           onClick={() => navigate({ to: `/product/${product.id}` })}
           className="text-left"
         >
-          <h3 className="font-semibold text-[#212121] text-sm leading-tight hover:text-[#b38b00] transition-colors">
+          <h3 className="font-semibold text-[var(--tdg-dark)] text-sm leading-tight hover:text-[#b38b00] transition-colors">
             {product.name}
           </h3>
         </button>
@@ -111,7 +111,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               size={12}
               className={
                 n <= 4
-                  ? "fill-[#FED100] text-[#FED100]"
+                  ? "fill-[#FED100] text-[var(--tdg-amber)]"
                   : "fill-gray-200 text-gray-200"
               }
             />
@@ -120,14 +120,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
         <div className="mt-2">
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold text-[#212121]">
+            <span className="text-lg font-bold text-[var(--tdg-dark)]">
               &#x20b9;{product.price}
             </span>
             <span className="text-sm text-gray-400 line-through">
               &#x20b9;{product.mrp}
             </span>
           </div>
-          <span className="inline-block bg-[#FFEE32]/40 text-[#7a6600] text-xs px-2 py-0.5 rounded mt-0.5 font-medium">
+          <span className="inline-block bg-[var(--tdg-yellow)]/40 text-[#7a6600] text-xs px-2 py-0.5 rounded mt-0.5 font-medium">
             Save &#x20b9;{save}
           </span>
         </div>
@@ -135,7 +135,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           type="button"
           onClick={addToCart}
           data-ocid="product.add_to_cart.button"
-          className="mt-auto pt-3 w-full bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+          className="mt-auto pt-3 w-full bg-[var(--tdg-amber)] hover:bg-[#e6bc00] text-[var(--tdg-dark)] font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
         >
           <ShoppingCart size={16} /> Add to Cart
         </button>

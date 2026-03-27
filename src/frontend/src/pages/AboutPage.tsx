@@ -98,7 +98,7 @@ export default function AboutPage() {
   ].filter((l) => l.value);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] font-inter">
+    <div className="min-h-screen bg-[var(--tdg-bg)] font-inter">
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-12">
         {/* Hero */}
@@ -112,14 +112,14 @@ export default function AboutPage() {
             <img
               src={profileSrc}
               alt="Profile"
-              className="w-32 h-32 rounded-full object-cover border-4 border-[#FED100] shadow-xl mx-auto mb-5"
+              className="w-32 h-32 rounded-full object-cover border-4 border-[var(--tdg-amber)] shadow-xl mx-auto mb-5"
             />
           ) : (
-            <div className="w-32 h-32 rounded-full bg-[#212121] border-4 border-[#FED100] flex items-center justify-center text-[#FED100] font-bold text-3xl font-playfair mx-auto mb-5 shadow-xl">
+            <div className="w-32 h-32 rounded-full bg-[var(--tdg-dark)] border-4 border-[var(--tdg-amber)] flex items-center justify-center text-[var(--tdg-amber)] font-bold text-3xl font-playfair mx-auto mb-5 shadow-xl">
               {settings.logoText || "TDG"}
             </div>
           )}
-          <h1 className="font-playfair text-3xl md:text-4xl font-bold text-[#212121] mb-2">
+          <h1 className="font-playfair text-3xl md:text-4xl font-bold text-[var(--tdg-dark)] mb-2">
             The Digital Gallery by Emon
           </h1>
           {me.tagline && (
@@ -130,7 +130,7 @@ export default function AboutPage() {
               Artist &amp; Photo Frame Creator based in Assam
             </p>
           )}
-          <div className="w-16 h-1 bg-[#FED100] rounded-full mx-auto mt-4" />
+          <div className="w-16 h-1 bg-[var(--tdg-amber)] rounded-full mx-auto mt-4" />
         </motion.div>
 
         {!hasContent ? (
@@ -138,11 +138,11 @@ export default function AboutPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl border border-[#D6D6D6] p-16 text-center"
+            className="bg-white rounded-2xl border border-[var(--tdg-light)] p-16 text-center"
             data-ocid="about.empty_state"
           >
             <div className="text-5xl mb-4">🌟</div>
-            <h2 className="font-playfair text-2xl font-bold text-[#212121] mb-2">
+            <h2 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)] mb-2">
               More About Me — Coming Soon
             </h2>
             <p className="text-gray-500 max-w-sm mx-auto mb-6">
@@ -152,7 +152,7 @@ export default function AboutPage() {
             <button
               type="button"
               onClick={() => navigate({ to: "/" })}
-              className="bg-[#FED100] text-[#212121] font-bold px-8 py-3 rounded-xl hover:bg-[#e6bc00] transition-colors"
+              className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold px-8 py-3 rounded-xl hover:bg-[#e6bc00] transition-colors"
               data-ocid="about.shop.button"
             >
               Shop Photo Frames
@@ -166,10 +166,10 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white rounded-2xl border border-[#D6D6D6] p-6 md:p-8"
+                className="bg-white rounded-2xl border border-[var(--tdg-light)] p-6 md:p-8"
                 data-ocid="about.bio.section"
               >
-                <h2 className="font-playfair text-2xl font-bold text-[#212121] mb-4">
+                <h2 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)] mb-4">
                   About Me
                 </h2>
                 <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-base">
@@ -184,7 +184,7 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-[#212121] text-white rounded-2xl p-6 md:p-8"
+                className="bg-[var(--tdg-dark)] text-white rounded-2xl p-6 md:p-8"
                 data-ocid="about.experience.section"
               >
                 <h2 className="font-playfair text-2xl font-bold mb-4">
@@ -202,10 +202,10 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl border border-[#D6D6D6] p-6 md:p-8"
+                className="bg-white rounded-2xl border border-[var(--tdg-light)] p-6 md:p-8"
                 data-ocid="about.social.section"
               >
-                <h2 className="font-playfair text-2xl font-bold text-[#212121] mb-6">
+                <h2 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)] mb-6">
                   Connect With Me
                 </h2>
                 <div className="grid md:grid-cols-2 gap-8">
@@ -221,7 +221,7 @@ export default function AboutPage() {
                             href={link.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-3 rounded-xl border border-[#D6D6D6] hover:border-[#FED100] hover:bg-[#FED100]/5 transition-all group"
+                            className="flex items-center gap-3 p-3 rounded-xl border border-[var(--tdg-light)] hover:border-[var(--tdg-amber)] hover:bg-[var(--tdg-amber)]/5 transition-all group"
                             data-ocid={`about.personal_${link.label.toLowerCase()}.link`}
                           >
                             <link.icon
@@ -232,7 +232,7 @@ export default function AboutPage() {
                               <div className="text-xs text-gray-400">
                                 {link.label}
                               </div>
-                              <div className="text-sm font-medium text-[#212121] group-hover:text-[#b38b00]">
+                              <div className="text-sm font-medium text-[var(--tdg-dark)] group-hover:text-[#b38b00]">
                                 {link.value}
                               </div>
                             </div>
@@ -253,7 +253,7 @@ export default function AboutPage() {
                             href={link.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-3 rounded-xl border border-[#D6D6D6] hover:border-[#FED100] hover:bg-[#FED100]/5 transition-all group"
+                            className="flex items-center gap-3 p-3 rounded-xl border border-[var(--tdg-light)] hover:border-[var(--tdg-amber)] hover:bg-[var(--tdg-amber)]/5 transition-all group"
                             data-ocid={`about.business_${link.label.toLowerCase()}.link`}
                           >
                             <link.icon
@@ -264,7 +264,7 @@ export default function AboutPage() {
                               <div className="text-xs text-gray-400">
                                 {link.label}
                               </div>
-                              <div className="text-sm font-medium text-[#212121] group-hover:text-[#b38b00]">
+                              <div className="text-sm font-medium text-[var(--tdg-dark)] group-hover:text-[#b38b00]">
                                 {link.value}
                               </div>
                             </div>
@@ -288,7 +288,7 @@ export default function AboutPage() {
               className="mt-10"
               data-ocid="about.portfolio.section"
             >
-              <h2 className="font-playfair text-2xl font-bold text-[#212121] mb-2">
+              <h2 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)] mb-2">
                 Our Portfolio
               </h2>
               <p className="text-gray-500 mb-5">
@@ -299,7 +299,7 @@ export default function AboutPage() {
                   (photo: string, idx: number) => (
                     <div
                       key={String(idx)}
-                      className="rounded-xl overflow-hidden border border-[#D6D6D6] shadow-sm aspect-square"
+                      className="rounded-xl overflow-hidden border border-[var(--tdg-light)] shadow-sm aspect-square"
                     >
                       <img
                         src={photo}

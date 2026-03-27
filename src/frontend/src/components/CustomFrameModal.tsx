@@ -46,8 +46,8 @@ function OptionPhotoCard({
             disabled
               ? "border-gray-200 opacity-60 cursor-not-allowed"
               : selected
-                ? "border-[#FED100] scale-[1.04]"
-                : "border-gray-200 hover:border-[#FED100]/60 hover:scale-[1.02]"
+                ? "border-[var(--tdg-amber)] scale-[1.04]"
+                : "border-gray-200 hover:border-[var(--tdg-amber)]/60 hover:scale-[1.02]"
           }`}
           style={{
             minWidth: 130,
@@ -103,7 +103,11 @@ function OptionPhotoCard({
           )}
           <div
             className={`px-2 py-1.5 text-center w-full ${
-              disabled ? "bg-gray-100" : selected ? "bg-[#FED100]/20" : ""
+              disabled
+                ? "bg-gray-100"
+                : selected
+                  ? "bg-[var(--tdg-amber)]/20"
+                  : ""
             }`}
           >
             <span
@@ -129,7 +133,7 @@ function OptionPhotoCard({
             )}
           </div>
           {selected && !disabled && (
-            <span className="absolute top-2 right-2 bg-[#FED100] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold text-[#212121] shadow">
+            <span className="absolute top-2 right-2 bg-[var(--tdg-amber)] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold text-[var(--tdg-dark)] shadow">
               ✓
             </span>
           )}
@@ -336,7 +340,7 @@ export default function CustomFrameModal({
         {/* Header */}
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
           <div>
-            <h2 className="font-bold text-xl text-[#212121]">
+            <h2 className="font-bold text-xl text-[var(--tdg-dark)]">
               Custom Frame Order
             </h2>
             <p className="text-gray-500 text-sm">
@@ -359,7 +363,7 @@ export default function CustomFrameModal({
         <div className="p-6 space-y-7">
           {/* Dimensions */}
           <div>
-            <div className="text-sm font-semibold text-[#212121] mb-3">
+            <div className="text-sm font-semibold text-[var(--tdg-dark)] mb-3">
               📐 Frame Dimensions *
             </div>
             <div className="flex flex-col gap-3">
@@ -375,7 +379,7 @@ export default function CustomFrameModal({
                         playClick();
                         setUnit(u);
                       }}
-                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${unit === u ? "border-[#FED100] bg-[#FED100]/10 text-[#212121]" : "border-gray-200 text-gray-500 hover:border-[#FED100]/50"}`}
+                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${unit === u ? "border-[var(--tdg-amber)] bg-[var(--tdg-amber)]/10 text-[var(--tdg-dark)]" : "border-gray-200 text-gray-500 hover:border-[var(--tdg-amber)]/50"}`}
                       data-ocid={`custom_frame.unit_${u}.toggle`}
                     >
                       {u}
@@ -390,7 +394,7 @@ export default function CustomFrameModal({
                   value={width}
                   onChange={(e) => setWidth(e.target.value)}
                   placeholder="Width"
-                  className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FED100] focus:ring-2 focus:ring-[#FED100]/20"
+                  className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)] focus:ring-2 focus:ring-[var(--tdg-amber)]/20"
                   data-ocid="custom_frame.width.input"
                 />
                 <span className="text-gray-400 font-bold text-lg">×</span>
@@ -399,7 +403,7 @@ export default function CustomFrameModal({
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
                   placeholder="Height"
-                  className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FED100] focus:ring-2 focus:ring-[#FED100]/20"
+                  className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)] focus:ring-2 focus:ring-[var(--tdg-amber)]/20"
                   data-ocid="custom_frame.height.input"
                 />
               </div>
@@ -410,7 +414,7 @@ export default function CustomFrameModal({
           {woodOptions.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-semibold text-[#212121]">
+                <span className="text-sm font-semibold text-[var(--tdg-dark)]">
                   🪵 Wood Colour:
                 </span>
                 <span className="text-sm text-[#b38b00] font-medium">
@@ -432,8 +436,8 @@ export default function CustomFrameModal({
                     }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${
                       material === opt.name
-                        ? "border-[#FED100] bg-[#FED100]/10 text-[#212121] shadow-sm"
-                        : "border-gray-300 text-gray-600 hover:border-[#FED100]/60"
+                        ? "border-[var(--tdg-amber)] bg-[var(--tdg-amber)]/10 text-[var(--tdg-dark)] shadow-sm"
+                        : "border-gray-300 text-gray-600 hover:border-[var(--tdg-amber)]/60"
                     }`}
                   >
                     {opt.image && (
@@ -457,7 +461,7 @@ export default function CustomFrameModal({
 
           {/* Frame Colour */}
           <div>
-            <div className="text-sm font-semibold text-[#212121] mb-3">
+            <div className="text-sm font-semibold text-[var(--tdg-dark)] mb-3">
               🎨 Frame Colour <span className="text-red-500">*</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -482,7 +486,7 @@ export default function CustomFrameModal({
 
           {/* Frame Design */}
           <div>
-            <div className="text-sm font-semibold text-[#212121] mb-3">
+            <div className="text-sm font-semibold text-[var(--tdg-dark)] mb-3">
               🎨 Frame Design
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -504,7 +508,7 @@ export default function CustomFrameModal({
 
           {/* Frame Style */}
           <div>
-            <div className="text-sm font-semibold text-[#212121] mb-3">
+            <div className="text-sm font-semibold text-[var(--tdg-dark)] mb-3">
               ✨ Frame Style
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -528,7 +532,7 @@ export default function CustomFrameModal({
           <div className="border border-gray-200 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="text-sm font-semibold text-[#212121]">
+                <div className="text-sm font-semibold text-[var(--tdg-dark)]">
                   🖨️ Add Printing Service?
                 </div>
                 <div className="text-xs text-gray-500">
@@ -542,7 +546,7 @@ export default function CustomFrameModal({
                   setAddPrinting((v) => !v);
                 }}
                 className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors ${
-                  addPrinting ? "bg-[#FED100]" : "bg-gray-200"
+                  addPrinting ? "bg-[var(--tdg-amber)]" : "bg-gray-200"
                 }`}
                 style={{ width: 52 }}
                 data-ocid="custom_frame.printing.toggle"
@@ -575,7 +579,9 @@ export default function CustomFrameModal({
 
           {/* Quantity */}
           <div className="flex items-center justify-between">
-            <div className="text-sm font-semibold text-[#212121]">Quantity</div>
+            <div className="text-sm font-semibold text-[var(--tdg-dark)]">
+              Quantity
+            </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -583,7 +589,7 @@ export default function CustomFrameModal({
                   playClick();
                   setQty((q) => Math.max(1, q - 1));
                 }}
-                className="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center hover:border-[#FED100] text-xl font-bold transition-colors"
+                className="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center hover:border-[var(--tdg-amber)] text-xl font-bold transition-colors"
               >
                 −
               </button>
@@ -594,7 +600,7 @@ export default function CustomFrameModal({
                   playClick();
                   setQty((q) => Math.min(10, q + 1));
                 }}
-                className="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center hover:border-[#FED100] text-xl font-bold transition-colors"
+                className="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center hover:border-[var(--tdg-amber)] text-xl font-bold transition-colors"
               >
                 +
               </button>
@@ -602,7 +608,7 @@ export default function CustomFrameModal({
           </div>
 
           {/* Live Price */}
-          <div className="bg-[#FED100]/10 border border-[#FED100]/40 rounded-2xl p-4">
+          <div className="bg-[var(--tdg-amber)]/10 border border-[var(--tdg-amber)]/40 rounded-2xl p-4">
             {livePrice !== null ? (
               <>
                 <div className="flex items-center justify-between">
@@ -610,7 +616,7 @@ export default function CustomFrameModal({
                     Estimated Price
                   </span>
                   <span
-                    className="text-2xl font-bold text-[#212121]"
+                    className="text-2xl font-bold text-[var(--tdg-dark)]"
                     style={{ transition: "all 0.3s ease" }}
                   >
                     ₹{livePrice}
@@ -642,7 +648,7 @@ export default function CustomFrameModal({
               handleAdd();
             }}
             disabled={!width || !height || added}
-            className="w-full bg-[#FED100] hover:bg-[#e6bc00] disabled:opacity-60 text-[#212121] font-bold py-4 rounded-xl transition-colors text-base"
+            className="w-full bg-[var(--tdg-amber)] hover:bg-[#e6bc00] disabled:opacity-60 text-[var(--tdg-dark)] font-bold py-4 rounded-xl transition-colors text-base"
             data-ocid="custom_frame.add_to_cart.button"
           >
             {added

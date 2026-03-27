@@ -196,6 +196,14 @@ export interface Settings {
   customFrameBaseRateCm?: number;
   customFrameBaseRateInch?: number;
   customFrameBaseRateFt?: number;
+  orderConfirmationMessage?: string;
+  footerBgImage?: string;
+  colorBg?: string;
+  colorDark?: string;
+  colorMedium?: string;
+  colorLight?: string;
+  colorAmber?: string;
+  colorYellow?: string;
 }
 
 const DEFAULT_PRODUCTS: Product[] = [
@@ -583,6 +591,12 @@ const DEFAULT_SETTINGS: Settings = {
   customFrameBaseRateCm: 3,
   customFrameBaseRateInch: 50,
   customFrameBaseRateFt: 500,
+  colorBg: "#f5f5f5",
+  colorDark: "#212121",
+  colorMedium: "#333533",
+  colorLight: "#D6D6D6",
+  colorAmber: "#FED100",
+  colorYellow: "#FFEE32",
 };
 
 export function getProducts(): Product[] {

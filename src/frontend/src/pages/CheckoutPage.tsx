@@ -12,7 +12,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import SwipeConfirmButton from "../components/SwipeConfirmButton";
 import { useData } from "../lib/DataContext";
-import { addOrder } from "../lib/data";
+import { orderFromBackend, orderToBackendNew } from "../lib/backendOrders";
 import { playClick } from "../lib/sounds";
 
 const UPI_APPS = [
@@ -21,7 +21,7 @@ const UPI_APPS = [
     color: "#5f259f",
     textColor: "white",
     icon: "P",
-    logo: "/assets/uploads/screenshot_20260325-163521.google-019d24b2-e5b4-74fb-9660-0f556232b583-4.png",
+    logo: "/assets/uploads/f798301b915d88b373c26cb5e05cb672-019d24b2-d6cb-71f8-bdcb-a3715ac1c080-3.jpg",
     getLink: (upiId: string, amount: number) =>
       `phonepe://pay?pa=${upiId}&pn=TheDigitalGallery&am=${amount}&cu=INR`,
   },
@@ -66,18 +66,9 @@ const UPI_APPS = [
     color: "#FFCA28",
     textColor: "#212121",
     icon: "F",
-    logo: "/assets/uploads/f798301b915d88b373c26cb5e05cb672-019d24b2-d6cb-71f8-bdcb-a3715ac1c080-3.jpg",
+    logo: "/assets/uploads/screenshot_20260325-163521.google-019d24b2-e5b4-74fb-9660-0f556232b583-4.png",
     getLink: (upiId: string, amount: number) =>
       `upi://pay?pa=${upiId}&pn=TheDigitalGallery&am=${amount}&cu=INR&tn=FamPay`,
-  },
-  {
-    name: "CRED",
-    color: "#1a1a2e",
-    textColor: "white",
-    icon: "C",
-    logo: "",
-    getLink: (upiId: string, amount: number) =>
-      `upi://pay?pa=${upiId}&pn=TheDigitalGallery&am=${amount}&cu=INR&tn=CRED`,
   },
   {
     name: "Navi UPI",
@@ -96,15 +87,6 @@ const UPI_APPS = [
     logo: "/assets/uploads/screenshot_20260325-171328.google-019d24d1-45ff-750f-9061-ceb313a6a772-2.png",
     getLink: (upiId: string, amount: number) =>
       `upi://pay?pa=${upiId}&pn=TheDigitalGallery&am=${amount}&cu=INR&tn=Airtel`,
-  },
-  {
-    name: "Any UPI App",
-    color: "#FED100",
-    textColor: "#212121",
-    icon: "₹",
-    logo: "",
-    getLink: (upiId: string, amount: number) =>
-      `upi://pay?pa=${upiId}&pn=TheDigitalGallery&am=${amount}&cu=INR`,
   },
 ];
 
@@ -155,7 +137,7 @@ function QrCodeSection({ qrImage }: { qrImage: string }) {
         <button
           type="button"
           onClick={revealQr}
-          className="flex items-center gap-2 bg-[#FED100] text-[#212121] font-bold px-5 py-2.5 rounded-xl hover:bg-[#e6bc00] transition-colors text-sm"
+          className="flex items-center gap-2 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold px-5 py-2.5 rounded-xl hover:bg-[#e6bc00] transition-colors text-sm"
           data-ocid="checkout.reveal_qr.button"
         >
           <RefreshCw size={14} /> Tap to reveal QR
@@ -217,8 +199,14 @@ function QrCodeSection({ qrImage }: { qrImage: string }) {
 }
 
 export default function CheckoutPage() {
-  const { cart, setCart, settings, customerSession, addOrderToStore } =
-    useData();
+  const {
+    cart,
+    setCart,
+    settings,
+    customerSession,
+    addOrderToStore,
+    backendActor,
+  } = useData();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
 
@@ -271,12 +259,15 @@ export default function CheckoutPage() {
     return true;
   }
 
-  function confirmOrder() {
+  async function confirmOrder() {
     if (isPlacing) return;
     setIsPlacing(true);
     const ids: string[] = [];
+    const expectedDelivery = new Date(
+      Date.now() + 4 * 24 * 60 * 60 * 1000,
+    ).toLocaleDateString("en-IN");
     for (const item of cart) {
-      const newOrder = addOrder({
+      const orderInput = {
         customerName: name,
         phone,
         productId: item.productId,
@@ -292,15 +283,36 @@ export default function CheckoutPage() {
         pincode: "",
         pickupCity,
         photoRef: "via WhatsApp",
-        status: "pending",
-        expectedDelivery: new Date(
-          Date.now() + 4 * 24 * 60 * 60 * 1000,
-        ).toLocaleDateString("en-IN"),
+        status: "pending" as const,
+        expectedDelivery,
         notes: "",
         frameColour: item.frameColour,
-      });
-      addOrderToStore(newOrder);
-      ids.push(newOrder.id);
+      };
+      try {
+        if (backendActor) {
+          const backendResult = await backendActor.placeOrder(
+            orderToBackendNew(orderInput),
+          );
+          const newOrder = orderFromBackend(backendResult);
+          addOrderToStore(newOrder);
+          ids.push(newOrder.id);
+        } else {
+          throw new Error("No backend actor");
+        }
+      } catch (err) {
+        console.error(
+          "Backend placeOrder failed, falling back to localStorage:",
+          err,
+        );
+        const now = Date.now();
+        const fallbackOrder = {
+          ...orderInput,
+          id: `TDG${now.toString().slice(-6)}`,
+          createdAt: new Date().toISOString(),
+        };
+        addOrderToStore(fallbackOrder);
+        ids.push(fallbackOrder.id);
+      }
     }
     setPlacedOrderIds(ids);
     const orderSummary = cart
@@ -321,7 +333,7 @@ export default function CheckoutPage() {
 
   if (cart.length === 0 && !paymentDone) {
     return (
-      <div className="min-h-screen bg-[#f5f5f5]">
+      <div className="min-h-screen bg-[var(--tdg-bg)]">
         <Navbar />
         <div className="max-w-xl mx-auto px-4 py-20 text-center">
           <p className="text-gray-500 mb-4">Your cart is empty.</p>
@@ -331,7 +343,7 @@ export default function CheckoutPage() {
               playClick();
               navigate({ to: "/" });
             }}
-            className="bg-[#FED100] text-[#212121] font-bold px-8 py-3 rounded-lg hover:bg-[#e6bc00]"
+            className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold px-8 py-3 rounded-lg hover:bg-[#e6bc00]"
           >
             Shop Now
           </button>
@@ -346,28 +358,28 @@ export default function CheckoutPage() {
       `Hi, I have placed order ${placedOrderIds.join(", ")}. Here is my photo:`,
     );
     return (
-      <div className="min-h-screen bg-[#f5f5f5]">
+      <div className="min-h-screen bg-[var(--tdg-bg)]">
         <Navbar />
         <main
           className="max-w-xl mx-auto px-4 py-16 text-center"
           data-ocid="checkout.success_state"
         >
-          <div className="bg-white rounded-2xl border border-[#D6D6D6] p-10 shadow-sm">
+          <div className="bg-white rounded-2xl border border-[var(--tdg-light)] p-10 shadow-sm">
             <CheckCircle size={56} className="mx-auto mb-4 text-green-500" />
-            <h1 className="font-playfair text-3xl font-bold text-[#212121] mb-2">
+            <h1 className="font-playfair text-3xl font-bold text-[var(--tdg-dark)] mb-2">
               Order Confirmed! 🎉
             </h1>
             <p className="text-gray-500 mb-4">
               Thank you! Your photo frames are on their way to being created.
             </p>
-            <div className="bg-[#FED100]/10 border border-[#FED100]/30 rounded-xl p-4 mb-4">
+            <div className="bg-[var(--tdg-amber)]/10 border border-[var(--tdg-amber)]/30 rounded-xl p-4 mb-4">
               <p className="text-sm font-semibold text-[#7a6600] mb-2">
                 Your Order IDs:
               </p>
               {placedOrderIds.map((id) => (
                 <p
                   key={id}
-                  className="font-mono font-bold text-[#212121] text-lg"
+                  className="font-mono font-bold text-[var(--tdg-dark)] text-lg"
                 >
                   {id}
                 </p>
@@ -397,7 +409,7 @@ export default function CheckoutPage() {
                   playClick();
                   navigate({ to: "/my-orders" });
                 }}
-                className="w-full bg-[#FED100] text-[#212121] font-bold py-3 rounded-xl hover:bg-[#e6bc00]"
+                className="w-full bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold py-3 rounded-xl hover:bg-[#e6bc00]"
                 data-ocid="checkout.view_orders.button"
               >
                 View My Orders
@@ -408,7 +420,7 @@ export default function CheckoutPage() {
                   playClick();
                   navigate({ to: "/" });
                 }}
-                className="w-full border border-[#D6D6D6] text-[#212121] font-medium py-3 rounded-xl hover:border-[#FED100]"
+                className="w-full border border-[var(--tdg-light)] text-[var(--tdg-dark)] font-medium py-3 rounded-xl hover:border-[var(--tdg-amber)]"
                 data-ocid="checkout.continue_shopping.button"
               >
                 Continue Shopping
@@ -422,10 +434,10 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] font-inter">
+    <div className="min-h-screen bg-[var(--tdg-bg)] font-inter">
       <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="font-playfair text-2xl md:text-3xl font-bold text-[#212121] mb-6">
+        <h1 className="font-playfair text-2xl md:text-3xl font-bold text-[var(--tdg-dark)] mb-6">
           Checkout
         </h1>
 
@@ -437,14 +449,14 @@ export default function CheckoutPage() {
                   step > i + 1
                     ? "bg-green-500 text-white"
                     : step === i + 1
-                      ? "bg-[#FED100] text-[#212121]"
+                      ? "bg-[var(--tdg-amber)] text-[var(--tdg-dark)]"
                       : "bg-gray-200 text-gray-400"
                 }`}
               >
                 {step > i + 1 ? "✓" : i + 1}
               </div>
               <span
-                className={`text-xs font-medium ${step === i + 1 ? "text-[#212121]" : "text-gray-400"}`}
+                className={`text-xs font-medium ${step === i + 1 ? "text-[var(--tdg-dark)]" : "text-gray-400"}`}
               >
                 {label}
               </span>
@@ -455,10 +467,10 @@ export default function CheckoutPage() {
 
         {step === 1 && (
           <div
-            className="bg-white rounded-2xl border border-[#D6D6D6] p-6"
+            className="bg-white rounded-2xl border border-[var(--tdg-light)] p-6"
             data-ocid="checkout.address.panel"
           >
-            <h2 className="font-bold text-lg text-[#212121] mb-5">
+            <h2 className="font-bold text-lg text-[var(--tdg-dark)] mb-5">
               Delivery Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -475,7 +487,7 @@ export default function CheckoutPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   data-ocid="checkout.name.input"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#FED100]"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
                   placeholder="Your full name"
                 />
               </div>
@@ -494,7 +506,7 @@ export default function CheckoutPage() {
                     setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
                   }
                   data-ocid="checkout.phone.input"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#FED100]"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
                   placeholder="10-digit mobile number"
                 />
               </div>
@@ -513,7 +525,7 @@ export default function CheckoutPage() {
                     setSelectedLocationId(e.target.value);
                   }}
                   data-ocid="checkout.location.select"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#FED100] relative z-10 bg-white"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)] relative z-10 bg-white"
                 >
                   <option value="">-- Select location --</option>
                   {deliveryLocations.map((loc) => (
@@ -541,7 +553,7 @@ export default function CheckoutPage() {
                     setPickupCity(e.target.value);
                   }}
                   data-ocid="checkout.city.select"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#FED100] relative z-10 bg-white"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[var(--tdg-amber)] relative z-10 bg-white"
                 >
                   {(settings.pickupCities || []).map((city) => (
                     <option key={city} value={city}>
@@ -574,7 +586,7 @@ export default function CheckoutPage() {
                 playClick();
                 if (validateStep1()) setStep(2);
               }}
-              className="w-full bg-[#FED100] text-[#212121] font-bold py-3.5 rounded-xl hover:bg-[#e6bc00] transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold py-3.5 rounded-xl hover:bg-[#e6bc00] transition-colors flex items-center justify-center gap-2"
               data-ocid="checkout.next_step.button"
             >
               Continue to Summary <ChevronRight size={18} />
@@ -584,24 +596,24 @@ export default function CheckoutPage() {
 
         {step === 2 && (
           <div
-            className="bg-white rounded-2xl border border-[#D6D6D6] p-6"
+            className="bg-white rounded-2xl border border-[var(--tdg-light)] p-6"
             data-ocid="checkout.shipping.panel"
           >
-            <h2 className="font-bold text-lg text-[#212121] mb-5">
+            <h2 className="font-bold text-lg text-[var(--tdg-dark)] mb-5">
               Order Summary
             </h2>
-            <div className="bg-[#f5f5f5] rounded-xl p-4 mb-4">
+            <div className="bg-[var(--tdg-bg)] rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-500">
                   Delivery Location:
                 </span>
-                <span className="text-sm font-semibold text-[#212121]">
+                <span className="text-sm font-semibold text-[var(--tdg-dark)]">
                   {locationName}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500">Delivery Charge:</span>
-                <span className="text-sm font-semibold text-[#212121]">
+                <span className="text-sm font-semibold text-[var(--tdg-dark)]">
                   {shippingCharge === 0 ? "Free" : `₹${shippingCharge}`}
                 </span>
               </div>
@@ -626,7 +638,7 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-[#D6D6D6] pt-4 space-y-2">
+            <div className="border-t border-[var(--tdg-light)] pt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Subtotal</span>
                 <span>₹{subtotal}</span>
@@ -637,16 +649,16 @@ export default function CheckoutPage() {
                   {shippingCharge === 0 ? "Free" : `₹${shippingCharge}`}
                 </span>
               </div>
-              <div className="flex justify-between font-bold text-[#212121]">
+              <div className="flex justify-between font-bold text-[var(--tdg-dark)]">
                 <span>Total</span>
                 <span>₹{total}</span>
               </div>
-              <div className="bg-[#FED100]/20 border border-[#FED100]/40 rounded-lg p-3 mt-2">
+              <div className="bg-[var(--tdg-amber)]/20 border border-[var(--tdg-amber)]/40 rounded-lg p-3 mt-2">
                 <div className="flex justify-between">
                   <span className="font-semibold text-[#7a6600]">
                     30% Advance to Pay
                   </span>
-                  <span className="font-bold text-[#212121] text-lg">
+                  <span className="font-bold text-[var(--tdg-dark)] text-lg">
                     ₹{advance}
                   </span>
                 </div>
@@ -662,7 +674,7 @@ export default function CheckoutPage() {
                   playClick();
                   setStep(1);
                 }}
-                className="flex items-center gap-1 border border-[#D6D6D6] text-[#212121] font-medium py-3 px-5 rounded-xl hover:border-[#FED100]"
+                className="flex items-center gap-1 border border-[var(--tdg-light)] text-[var(--tdg-dark)] font-medium py-3 px-5 rounded-xl hover:border-[var(--tdg-amber)]"
                 data-ocid="checkout.prev_step.button"
               >
                 <ChevronLeft size={16} /> Back
@@ -673,7 +685,7 @@ export default function CheckoutPage() {
                   playClick();
                   setStep(3);
                 }}
-                className="flex-1 bg-[#FED100] text-[#212121] font-bold py-3.5 rounded-xl hover:bg-[#e6bc00] transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold py-3.5 rounded-xl hover:bg-[#e6bc00] transition-colors flex items-center justify-center gap-2"
                 data-ocid="checkout.proceed_payment.button"
               >
                 Proceed to Payment <ChevronRight size={18} />
@@ -691,7 +703,7 @@ export default function CheckoutPage() {
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <div>
-                  <h2 className="font-bold text-lg text-[#212121]">
+                  <h2 className="font-bold text-lg text-[var(--tdg-dark)]">
                     Pay ₹{advance} Advance
                   </h2>
                   <p className="text-xs text-gray-500">
@@ -715,7 +727,7 @@ export default function CheckoutPage() {
                 {/* All UPI Options */}
                 <div className="mb-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-base font-bold text-[#212121]">
+                    <span className="text-base font-bold text-[var(--tdg-dark)]">
                       💳 All UPI Options
                     </span>
                   </div>
@@ -763,7 +775,7 @@ export default function CheckoutPage() {
                 {/* QR Code section */}
                 <div className="mb-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm font-bold text-[#212121]">
+                    <span className="text-sm font-bold text-[var(--tdg-dark)]">
                       📱 Scan QR Code
                     </span>
                   </div>
@@ -773,7 +785,7 @@ export default function CheckoutPage() {
                     <div className="bg-gray-50 rounded-xl p-4 text-center">
                       <p className="text-sm text-gray-400">
                         UPI ID:{" "}
-                        <span className="font-mono font-bold text-[#212121]">
+                        <span className="font-mono font-bold text-[var(--tdg-dark)]">
                           {upiId}
                         </span>
                       </p>
@@ -801,7 +813,7 @@ export default function CheckoutPage() {
                       <div className="flex-1 h-px bg-gray-200" />
                     </div>
                     <div className="bg-gray-50 rounded-xl p-4 mb-4 text-sm">
-                      <p className="font-semibold text-[#212121] mb-2">
+                      <p className="font-semibold text-[var(--tdg-dark)] mb-2">
                         Bank Transfer
                       </p>
                       <div className="space-y-1 text-gray-600 text-xs">

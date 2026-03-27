@@ -41,12 +41,12 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-50">
         {settings.announcementBarEnabled && settings.announcementBar && (
-          <div className="bg-[#FED100] text-[#212121] text-xs text-center py-2 px-4 font-medium">
+          <div className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] text-xs text-center py-2 px-4 font-medium">
             {settings.announcementBar}
           </div>
         )}
 
-        <nav className="bg-[#212121] text-white">
+        <nav className="bg-[var(--tdg-dark)] text-white">
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2 flex-shrink-0">
               {settings.logoImage ? (
@@ -56,7 +56,7 @@ export default function Navbar() {
                   className="h-10 max-w-[120px] object-contain"
                 />
               ) : (
-                <div className="w-10 h-10 bg-[#FED100] rounded flex items-center justify-center font-bold text-lg font-playfair text-[#212121]">
+                <div className="w-10 h-10 bg-[var(--tdg-amber)] rounded flex items-center justify-center font-bold text-lg font-playfair text-[var(--tdg-dark)]">
                   {settings.logoText}
                 </div>
               )}
@@ -72,14 +72,14 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-6 text-sm">
               <Link
                 to="/"
-                className="hover:text-[#FED100] transition-colors"
+                className="hover:text-[var(--tdg-amber)] transition-colors"
                 data-ocid="nav.link"
               >
                 Home
               </Link>
               <button
                 type="button"
-                className="hover:text-[#FED100] transition-colors"
+                className="hover:text-[var(--tdg-amber)] transition-colors"
                 onClick={() =>
                   document
                     .getElementById("products")
@@ -90,7 +90,7 @@ export default function Navbar() {
               </button>
               <button
                 type="button"
-                className="hover:text-[#FED100] transition-colors"
+                className="hover:text-[var(--tdg-amber)] transition-colors"
                 onClick={() =>
                   document
                     .getElementById("how-it-works")
@@ -101,14 +101,14 @@ export default function Navbar() {
               </button>
               <Link
                 to="/track"
-                className="hover:text-[#FED100] transition-colors"
+                className="hover:text-[var(--tdg-amber)] transition-colors"
                 data-ocid="nav.track.link"
               >
                 Track Order
               </Link>
               <Link
                 to="/about"
-                className="hover:text-[#FED100] transition-colors"
+                className="hover:text-[var(--tdg-amber)] transition-colors"
                 data-ocid="nav.about.link"
               >
                 About
@@ -116,7 +116,7 @@ export default function Navbar() {
               {customerSession && (
                 <Link
                   to="/my-orders"
-                  className="hover:text-[#FED100] transition-colors flex items-center gap-1"
+                  className="hover:text-[var(--tdg-amber)] transition-colors flex items-center gap-1"
                   data-ocid="nav.my_orders.link"
                 >
                   <Package size={14} /> My Orders
@@ -142,7 +142,7 @@ export default function Navbar() {
                   }}
                 >
                   {isDark ? (
-                    <Sun size={18} className="text-[#FED100]" />
+                    <Sun size={18} className="text-[var(--tdg-amber)]" />
                   ) : (
                     <Moon size={18} className="text-gray-300" />
                   )}
@@ -152,7 +152,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/track" })}
-                className="hidden sm:flex items-center gap-1 text-xs text-gray-400 hover:text-[#FED100] transition-colors"
+                className="hidden sm:flex items-center gap-1 text-xs text-gray-400 hover:text-[var(--tdg-amber)] transition-colors"
               >
                 <Search size={16} />
                 <span>Track</span>
@@ -162,12 +162,12 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/cart" })}
-                className="relative p-1 hover:text-[#FED100] transition-colors"
+                className="relative p-1 hover:text-[var(--tdg-amber)] transition-colors"
                 data-ocid="nav.cart.button"
               >
                 <ShoppingCart size={20} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#FED100] text-[#212121] text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold">
                     {cartCount}
                   </span>
                 )}
@@ -178,7 +178,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setCustomerSession(null)}
-                  className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#FED100] transition-colors"
+                  className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 hover:text-[var(--tdg-amber)] transition-colors"
                   data-ocid="nav.logout.button"
                 >
                   <LogOut size={14} />
@@ -190,7 +190,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setLoginOpen(true)}
-                  className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#FED100] transition-colors"
+                  className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 hover:text-[var(--tdg-amber)] transition-colors"
                   data-ocid="nav.login.button"
                 >
                   <LogIn size={14} />
@@ -212,7 +212,7 @@ export default function Navbar() {
             <div className="lg:hidden bg-[#1a1a1a] border-t border-[#333] px-4 py-3 space-y-3 text-sm">
               <Link
                 to="/"
-                className="block hover:text-[#FED100]"
+                className="block hover:text-[var(--tdg-amber)]"
                 onClick={() => setMenuOpen(false)}
                 data-ocid="mobile_nav.home.link"
               >
@@ -220,7 +220,7 @@ export default function Navbar() {
               </Link>
               <button
                 type="button"
-                className="block hover:text-[#FED100] text-left w-full"
+                className="block hover:text-[var(--tdg-amber)] text-left w-full"
                 onClick={() => {
                   document
                     .getElementById("products")
@@ -232,7 +232,7 @@ export default function Navbar() {
               </button>
               <button
                 type="button"
-                className="block hover:text-[#FED100] text-left w-full"
+                className="block hover:text-[var(--tdg-amber)] text-left w-full"
                 onClick={() => {
                   document
                     .getElementById("how-it-works")
@@ -244,7 +244,7 @@ export default function Navbar() {
               </button>
               <Link
                 to="/track"
-                className="block hover:text-[#FED100]"
+                className="block hover:text-[var(--tdg-amber)]"
                 onClick={() => setMenuOpen(false)}
                 data-ocid="mobile_nav.track.link"
               >
@@ -252,7 +252,7 @@ export default function Navbar() {
               </Link>
               <Link
                 to="/about"
-                className="block hover:text-[#FED100]"
+                className="block hover:text-[var(--tdg-amber)]"
                 onClick={() => setMenuOpen(false)}
                 data-ocid="mobile_nav.about.link"
               >
@@ -261,7 +261,7 @@ export default function Navbar() {
               {customerSession && (
                 <Link
                   to="/my-orders"
-                  className="block hover:text-[#FED100] flex items-center gap-1"
+                  className="block hover:text-[var(--tdg-amber)] flex items-center gap-1"
                   onClick={() => setMenuOpen(false)}
                   data-ocid="mobile_nav.my_orders.link"
                 >
@@ -274,7 +274,7 @@ export default function Navbar() {
                   navigate({ to: "/cart" });
                   setMenuOpen(false);
                 }}
-                className="flex items-center gap-2 hover:text-[#FED100] w-full"
+                className="flex items-center gap-2 hover:text-[var(--tdg-amber)] w-full"
                 data-ocid="mobile_nav.cart.button"
               >
                 <ShoppingCart size={14} /> Cart{" "}
@@ -287,7 +287,7 @@ export default function Navbar() {
                     setCustomerSession(null);
                     setMenuOpen(false);
                   }}
-                  className="flex items-center gap-2 hover:text-[#FED100] w-full"
+                  className="flex items-center gap-2 hover:text-[var(--tdg-amber)] w-full"
                   data-ocid="mobile_nav.logout.button"
                 >
                   <LogOut size={14} /> Logout (
@@ -300,7 +300,7 @@ export default function Navbar() {
                     setLoginOpen(true);
                     setMenuOpen(false);
                   }}
-                  className="flex items-center gap-2 hover:text-[#FED100] w-full"
+                  className="flex items-center gap-2 hover:text-[var(--tdg-amber)] w-full"
                   data-ocid="mobile_nav.login.button"
                 >
                   <LogIn size={14} /> Login
@@ -312,11 +312,11 @@ export default function Navbar() {
                   toggleTheme();
                   setMenuOpen(false);
                 }}
-                className="flex items-center gap-2 hover:text-[#FED100] w-full"
+                className="flex items-center gap-2 hover:text-[var(--tdg-amber)] w-full"
                 data-ocid="mobile_nav.theme.toggle"
               >
                 {isDark ? (
-                  <Sun size={14} className="text-[#FED100]" />
+                  <Sun size={14} className="text-[var(--tdg-amber)]" />
                 ) : (
                   <Moon size={14} />
                 )}{" "}

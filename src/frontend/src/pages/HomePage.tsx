@@ -55,9 +55,9 @@ export default function HomePage() {
   const slideRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isDark = settings.theme === "dark";
 
-  const bg = isDark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]";
+  const bg = isDark ? "bg-[#1a1a1a]" : "bg-[var(--tdg-bg)]";
   const tileBg = isDark ? "bg-[#2a2c2a]" : "bg-[#333533]";
-  const text = isDark ? "text-white" : "text-[#212121]";
+  const text = isDark ? "text-white" : "text-[var(--tdg-dark)]";
   const subText = isDark ? "text-gray-400" : "text-[#555]";
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function HomePage() {
 
       {/* Ticker banner */}
       {settings.bannersEnabled && settings.bannerTexts.length > 0 && (
-        <div className="bg-[#212121] text-[#FED100] text-sm py-2 overflow-hidden">
+        <div className="bg-[var(--tdg-dark)] text-[var(--tdg-amber)] text-sm py-2 overflow-hidden">
           <div className="text-center font-medium transition-all duration-500">
             {settings.bannerTexts[bannerIdx]}
           </div>
@@ -167,7 +167,7 @@ export default function HomePage() {
 
       {/* Hero */}
       <section
-        className="bg-[#212121] text-white relative"
+        className="bg-[var(--tdg-dark)] text-white relative"
         style={{ height: "60vh", minHeight: "300px", maxHeight: "600px" }}
       >
         {/* Slideshow background — fixed coverage, no cropping */}
@@ -241,7 +241,7 @@ export default function HomePage() {
                   key={slide.id}
                   type="button"
                   onClick={() => setSlideIdx(i)}
-                  className={`h-2 rounded-full transition-all duration-300 ${i === slideIdx ? "bg-[#FED100] w-4" : "w-2 bg-white/50 hover:bg-white/80"}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${i === slideIdx ? "bg-[var(--tdg-amber)] w-4" : "w-2 bg-white/50 hover:bg-white/80"}`}
                   aria-label={`Go to slide ${i + 1}`}
                 />
               ))}
@@ -253,13 +253,13 @@ export default function HomePage() {
 
         <div className="relative z-10 h-full flex items-center">
           <div className="max-w-7xl mx-auto px-4 w-full py-8">
-            <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-3">
+            <p className="text-[var(--tdg-amber)] text-sm font-semibold uppercase tracking-widest mb-3">
               {settings.heroBadgeText || "Premium Photo Frames"}
             </p>
             <h1 className="font-playfair text-4xl md:text-5xl font-bold leading-tight mb-4">
               {settings.heroHeading || "Transform Your"}
               <br />
-              <span className="text-[#FED100]">
+              <span className="text-[var(--tdg-amber)]">
                 {settings.heroHeadingAccent || "Memories"}
               </span>{" "}
               Into Art
@@ -276,14 +276,14 @@ export default function HomePage() {
                     .getElementById("products")
                     ?.scrollIntoView({ behavior: "smooth" })
                 }
-                className="bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold px-7 py-3 rounded-lg transition-colors uppercase tracking-wide text-sm"
+                className="bg-[var(--tdg-amber)] hover:bg-[#e6bc00] text-[var(--tdg-dark)] font-bold px-7 py-3 rounded-lg transition-colors uppercase tracking-wide text-sm"
               >
                 Shop Regular Frames
               </button>
               <button
                 type="button"
                 onClick={() => setCustomFrameOpen(true)}
-                className="border border-[#FED100] text-[#FED100] hover:bg-[#FED100]/10 font-semibold px-7 py-3 rounded-lg transition-colors text-sm"
+                className="border border-[var(--tdg-amber)] text-[var(--tdg-amber)] hover:bg-[var(--tdg-amber)]/10 font-semibold px-7 py-3 rounded-lg transition-colors text-sm"
                 data-ocid="hero.custom_frame.button"
               >
                 🗒️ Order Custom Size
@@ -293,7 +293,9 @@ export default function HomePage() {
               <div className="mt-4 flex items-center gap-2">
                 <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
                 <span className="text-sm text-white/80">
-                  <strong className="text-[#FED100]">{todayOrderCount}</strong>{" "}
+                  <strong className="text-[var(--tdg-amber)]">
+                    {todayOrderCount}
+                  </strong>{" "}
                   orders placed today
                 </span>
               </div>
@@ -320,7 +322,7 @@ export default function HomePage() {
           ].map((tile) => (
             <div
               key={tile.title}
-              className="text-center text-white p-6 rounded-xl bg-[#212121] border border-[#333]"
+              className="text-center text-white p-6 rounded-xl bg-[var(--tdg-dark)] border border-[#333]"
             >
               <div className="text-3xl mb-2">{tile.icon}</div>
               <div className="font-playfair font-semibold text-lg">
@@ -335,7 +337,7 @@ export default function HomePage() {
       {/* Products */}
       <section id="products" className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
-          <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-2">
+          <p className="text-[var(--tdg-amber)] text-sm font-semibold uppercase tracking-widest mb-2">
             Our Collection
           </p>
           <h2
@@ -358,8 +360,8 @@ export default function HomePage() {
               onClick={() => setFilter(f)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors capitalize ${
                 filter === f
-                  ? "bg-[#FED100] text-[#212121] font-bold"
-                  : `${isDark ? "bg-[#2a2c2a] text-gray-300 border border-[#444]" : "bg-white text-[#333533] border border-[#D6D6D6]"} hover:border-[#FED100]`
+                  ? "bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold"
+                  : `${isDark ? "bg-[#2a2c2a] text-gray-300 border border-[#444]" : "bg-white text-[#333533] border border-[var(--tdg-light)]"} hover:border-[var(--tdg-amber)]`
               }`}
             >
               {f === "all"
@@ -380,7 +382,7 @@ export default function HomePage() {
       <section className={`${isDark ? "bg-[#1e1e1e]" : "bg-white"} py-12`}>
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-8">
-            <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-2">
+            <p className="text-[var(--tdg-amber)] text-sm font-semibold uppercase tracking-widest mb-2">
               What Would You Like?
             </p>
             <h2 className={`font-playfair text-3xl font-bold ${text}`}>
@@ -393,7 +395,7 @@ export default function HomePage() {
               className={`rounded-2xl border-2 p-8 flex flex-col items-center text-center ${
                 isDark
                   ? "border-[#333] bg-[#252525]"
-                  : "border-[#D6D6D6] bg-[#f9f9f9]"
+                  : "border-[var(--tdg-light)] bg-[#f9f9f9]"
               }`}
             >
               <div className="text-5xl mb-4">🖼️</div>
@@ -409,7 +411,7 @@ export default function HomePage() {
                   (s) => (
                     <span
                       key={s}
-                      className="text-xs bg-[#FED100]/20 text-[#7a6600] font-medium px-3 py-1 rounded-full"
+                      className="text-xs bg-[var(--tdg-amber)]/20 text-[#7a6600] font-medium px-3 py-1 rounded-full"
                     >
                       {s}
                     </span>
@@ -423,7 +425,7 @@ export default function HomePage() {
                     .getElementById("products")
                     ?.scrollIntoView({ behavior: "smooth" })
                 }
-                className="w-full bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold py-3.5 rounded-xl transition-colors text-sm uppercase tracking-wide"
+                className="w-full bg-[var(--tdg-amber)] hover:bg-[#e6bc00] text-[var(--tdg-dark)] font-bold py-3.5 rounded-xl transition-colors text-sm uppercase tracking-wide"
                 data-ocid="home.shop_regular.button"
               >
                 🛒 Shop Regular Frames
@@ -434,8 +436,8 @@ export default function HomePage() {
             <div
               className={`rounded-2xl border-2 p-8 flex flex-col items-center text-center ${
                 isDark
-                  ? "border-[#FED100]/30 bg-[#252525]"
-                  : "border-[#FED100]/40 bg-[#fffef0]"
+                  ? "border-[var(--tdg-amber)]/30 bg-[#252525]"
+                  : "border-[var(--tdg-amber)]/40 bg-[#fffef0]"
               }`}
             >
               <div className="text-5xl mb-4">🗒️</div>
@@ -455,7 +457,7 @@ export default function HomePage() {
                 ].map((s) => (
                   <span
                     key={s}
-                    className="text-xs bg-[#212121]/10 text-[#333] font-medium px-3 py-1 rounded-full"
+                    className="text-xs bg-[var(--tdg-dark)]/10 text-[#333] font-medium px-3 py-1 rounded-full"
                   >
                     {s}
                   </span>
@@ -464,7 +466,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setCustomFrameOpen(true)}
-                className="w-full border-2 border-[#FED100] text-[#212121] bg-white hover:bg-[#FED100]/10 font-bold py-3.5 rounded-xl transition-colors text-sm uppercase tracking-wide"
+                className="w-full border-2 border-[var(--tdg-amber)] text-[var(--tdg-dark)] bg-white hover:bg-[var(--tdg-amber)]/10 font-bold py-3.5 rounded-xl transition-colors text-sm uppercase tracking-wide"
                 data-ocid="custom_frame.open_modal_button"
               >
                 🗒️ Order Custom Size
@@ -480,7 +482,7 @@ export default function HomePage() {
           className="py-12 px-4 text-center"
           style={{ backgroundColor: settings.midPageAdBg || "#FED100" }}
         >
-          <h3 className="font-playfair text-2xl font-bold text-[#212121] mb-2">
+          <h3 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)] mb-2">
             {settings.midPageAdText}
           </h3>
           <p className="text-[#333533] mb-4">{settings.midPageAdSubtext}</p>
@@ -491,7 +493,7 @@ export default function HomePage() {
                 .getElementById("products")
                 ?.scrollIntoView({ behavior: "smooth" })
             }
-            className="bg-[#212121] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#333] transition-colors"
+            className="bg-[var(--tdg-dark)] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#333] transition-colors"
           >
             Shop Now
           </button>
@@ -512,11 +514,11 @@ export default function HomePage() {
 
       {/* Urgency band */}
       {settings.offerTimerEnabled !== false && (
-        <section className="bg-[#212121] text-white py-5">
+        <section className="bg-[var(--tdg-dark)] text-white py-5">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <p className="text-lg font-semibold">
               ⏰ {settings.offerTimerText || "Flash Sale ends in:"}{" "}
-              <span className="text-[#FED100] font-mono">
+              <span className="text-[var(--tdg-amber)] font-mono">
                 {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
               </span>
             </p>
@@ -531,7 +533,7 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
-            <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-2">
+            <p className="text-[var(--tdg-amber)] text-sm font-semibold uppercase tracking-widest mb-2">
               Process
             </p>
             <h2
@@ -568,8 +570,8 @@ export default function HomePage() {
               },
             ].map(({ icon: Icon, step, title, desc }) => (
               <div key={step} className="text-center">
-                <div className="w-14 h-14 bg-[#FED100]/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[#FED100]/30">
-                  <Icon size={24} className="text-[#FED100]" />
+                <div className="w-14 h-14 bg-[var(--tdg-amber)]/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[var(--tdg-amber)]/30">
+                  <Icon size={24} className="text-[var(--tdg-amber)]" />
                 </div>
                 <div className="text-gray-500 text-xs font-mono mb-1">
                   STEP {step}
@@ -587,7 +589,7 @@ export default function HomePage() {
       {/* Reviews */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
-          <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-2">
+          <p className="text-[var(--tdg-amber)] text-sm font-semibold uppercase tracking-widest mb-2">
             Reviews
           </p>
           <h2
@@ -602,12 +604,15 @@ export default function HomePage() {
             return (
               <div
                 key={reviewKey}
-                className={`${isDark ? "bg-[#2a2c2a] border-[#444]" : "bg-white border-[#D6D6D6]"} rounded-xl p-6 shadow-sm border`}
+                className={`${isDark ? "bg-[#2a2c2a] border-[#444]" : "bg-white border-[var(--tdg-light)]"} rounded-xl p-6 shadow-sm border`}
               >
                 <div className="flex gap-1 mb-3">
                   {Array.from({ length: t.rating }, (_, i) => i + 1).map(
                     (n) => (
-                      <span key={`star-${n}`} className="text-[#FED100]">
+                      <span
+                        key={`star-${n}`}
+                        className="text-[var(--tdg-amber)]"
+                      >
                         &#9733;
                       </span>
                     ),
@@ -626,7 +631,7 @@ export default function HomePage() {
                   />
                 )}
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-[#FED100] rounded-full flex items-center justify-center text-[#212121] font-bold text-sm">
+                  <div className="w-9 h-9 bg-[var(--tdg-amber)] rounded-full flex items-center justify-center text-[var(--tdg-dark)] font-bold text-sm">
                     {t.name[0]}
                   </div>
                   <div>
@@ -652,7 +657,7 @@ export default function HomePage() {
             data-ocid="home.our_work.section"
           >
             <div className="text-center mb-8">
-              <h2 className="font-playfair text-3xl font-bold text-[#212121]">
+              <h2 className="font-playfair text-3xl font-bold text-[var(--tdg-dark)]">
                 Our Work
               </h2>
               <p className="text-gray-500 mt-2">Real frames, real memories</p>
@@ -662,7 +667,7 @@ export default function HomePage() {
                 (photo: string, idx: number) => (
                   <div
                     key={String(idx)}
-                    className="rounded-2xl overflow-hidden border border-[#D6D6D6] shadow-sm aspect-square hover:shadow-md transition-shadow"
+                    className="rounded-2xl overflow-hidden border border-[var(--tdg-light)] shadow-sm aspect-square hover:shadow-md transition-shadow"
                   >
                     <img
                       src={photo}
@@ -679,9 +684,9 @@ export default function HomePage() {
       <OwnerShowcase />
 
       {/* Track CTA */}
-      <section className="bg-[#FED100] py-10">
+      <section className="bg-[var(--tdg-amber)] py-10">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <h3 className="font-playfair text-2xl font-bold text-[#212121] mb-2">
+          <h3 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)] mb-2">
             Already Ordered?
           </h3>
           <p className="text-[#333533] mb-4">
@@ -690,7 +695,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => navigate({ to: "/track" })}
-            className="bg-[#212121] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#333] transition-colors flex items-center gap-2 mx-auto"
+            className="bg-[var(--tdg-dark)] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#333] transition-colors flex items-center gap-2 mx-auto"
           >
             Track My Order <ChevronRight size={18} />
           </button>

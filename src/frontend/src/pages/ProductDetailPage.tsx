@@ -86,7 +86,7 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#f5f5f5]">
+      <div className="min-h-screen bg-[var(--tdg-bg)]">
         <Navbar />
         <div className="max-w-4xl mx-auto px-4 py-20 text-center">
           <p className="text-gray-500">Product not found.</p>
@@ -183,7 +183,7 @@ export default function ProductDetailPage() {
   return (
     <div
       className={`min-h-screen ${
-        isDark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]"
+        isDark ? "bg-[#1a1a1a]" : "bg-[var(--tdg-bg)]"
       } font-inter`}
     >
       <Navbar />
@@ -198,13 +198,15 @@ export default function ProductDetailPage() {
             Home
           </button>
           <span>/</span>
-          <span className="text-[#212121] font-medium">{product.name}</span>
+          <span className="text-[var(--tdg-dark)] font-medium">
+            {product.name}
+          </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {/* Image slideshow */}
           <div>
-            <div className="relative bg-white rounded-2xl border border-[#D6D6D6] overflow-hidden aspect-square">
+            <div className="relative bg-white rounded-2xl border border-[var(--tdg-light)] overflow-hidden aspect-square">
               {images.length > 0 ? (
                 <img
                   src={images[imgIdx]}
@@ -231,7 +233,7 @@ export default function ProductDetailPage() {
                   className="absolute top-3 right-3 bg-white/80 hover:bg-white rounded-lg p-2 shadow transition-colors"
                   data-ocid="product_detail.zoom.button"
                 >
-                  <ZoomIn size={18} className="text-[#212121]" />
+                  <ZoomIn size={18} className="text-[var(--tdg-dark)]" />
                 </button>
               )}
               {images.length > 1 && (
@@ -270,7 +272,9 @@ export default function ProductDetailPage() {
                       setImgIdx(i);
                     }}
                     className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                      i === imgIdx ? "border-[#FED100]" : "border-transparent"
+                      i === imgIdx
+                        ? "border-[var(--tdg-amber)]"
+                        : "border-transparent"
                     }`}
                   >
                     <img
@@ -286,10 +290,10 @@ export default function ProductDetailPage() {
 
           {/* Product info */}
           <div>
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#b38b00] bg-[#FED100]/20 px-3 py-1 rounded-full">
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#b38b00] bg-[var(--tdg-amber)]/20 px-3 py-1 rounded-full">
               {product.category}
             </span>
-            <h1 className="font-playfair text-2xl md:text-3xl font-bold text-[#212121] mt-3 mb-1">
+            <h1 className="font-playfair text-2xl md:text-3xl font-bold text-[var(--tdg-dark)] mt-3 mb-1">
               {product.name}
             </h1>
             <p className="text-gray-500 text-sm mb-4">{product.description}</p>
@@ -301,7 +305,7 @@ export default function ProductDetailPage() {
                   size={16}
                   className={
                     n <= 4
-                      ? "fill-[#FED100] text-[#FED100]"
+                      ? "fill-[#FED100] text-[var(--tdg-amber)]"
                       : "fill-gray-200 text-gray-200"
                   }
                 />
@@ -334,9 +338,9 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <div className="bg-white rounded-xl border border-[#D6D6D6] p-4 mb-4">
+            <div className="bg-white rounded-xl border border-[var(--tdg-light)] p-4 mb-4">
               <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-bold text-[#212121]">
+                <span className="text-3xl font-bold text-[var(--tdg-dark)]">
                   &#x20b9;{product.price + frameAddon}
                 </span>
                 <span className="text-lg text-gray-400 line-through">
@@ -349,7 +353,7 @@ export default function ProductDetailPage() {
                 </p>
               )}
               <div className="flex items-center gap-2 mt-2">
-                <span className="bg-[#FFEE32] text-[#7a6600] text-sm px-3 py-0.5 rounded-full font-bold">
+                <span className="bg-[var(--tdg-yellow)] text-[#7a6600] text-sm px-3 py-0.5 rounded-full font-bold">
                   Save &#x20b9;{save} ({Math.round((save / product.mrp) * 100)}%
                   OFF)
                 </span>
@@ -359,11 +363,30 @@ export default function ProductDetailPage() {
               </p>
             </div>
 
+            {/* Estimated Delivery Date */}
+            {(() => {
+              const d = new Date();
+              d.setDate(d.getDate() + 4);
+              const label = d.toLocaleDateString("en-IN", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              });
+              return (
+                <div className="flex items-center gap-2 text-sm text-green-700 mb-3 font-medium">
+                  <span>🚚</span>
+                  <span>
+                    Delivered by <span className="font-semibold">{label}</span>
+                  </span>
+                </div>
+              );
+            })()}
+
             {/* Wood Colour — Flipkart/Meesho style horizontal chips */}
             {woodOpts.length > 0 && (
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-semibold text-[#212121]">
+                  <span className="text-sm font-semibold text-[var(--tdg-dark)]">
                     Wood Colour:
                   </span>
                   <span className="text-sm text-[#b38b00] font-medium">
@@ -387,8 +410,8 @@ export default function ProductDetailPage() {
                       }}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${
                         frameCustomMaterial === opt.name
-                          ? "border-[#FED100] bg-[#FED100]/10 text-[#212121] shadow-sm"
-                          : "border-gray-300 text-gray-600 hover:border-[#FED100]/60"
+                          ? "border-[var(--tdg-amber)] bg-[var(--tdg-amber)]/10 text-[var(--tdg-dark)] shadow-sm"
+                          : "border-gray-300 text-gray-600 hover:border-[var(--tdg-amber)]/60"
                       }`}
                     >
                       {opt.image && (
@@ -419,7 +442,7 @@ export default function ProductDetailPage() {
             )}
 
             <div className="mb-4">
-              <div className="text-sm font-medium text-[#212121] mb-2">
+              <div className="text-sm font-medium text-[var(--tdg-dark)] mb-2">
                 Quantity:
               </div>
               <div className="flex items-center gap-3">
@@ -429,7 +452,7 @@ export default function ProductDetailPage() {
                     playClick();
                     setQty((q) => Math.max(1, q - 1));
                   }}
-                  className="w-10 h-10 rounded-lg border border-[#D6D6D6] flex items-center justify-center hover:border-[#FED100] transition-colors"
+                  className="w-10 h-10 rounded-lg border border-[var(--tdg-light)] flex items-center justify-center hover:border-[var(--tdg-amber)] transition-colors"
                   data-ocid="product_detail.qty_decrease.button"
                 >
                   <Minus size={16} />
@@ -441,7 +464,7 @@ export default function ProductDetailPage() {
                     playClick();
                     setQty((q) => Math.min(10, q + 1));
                   }}
-                  className="w-10 h-10 rounded-lg border border-[#D6D6D6] flex items-center justify-center hover:border-[#FED100] transition-colors"
+                  className="w-10 h-10 rounded-lg border border-[var(--tdg-light)] flex items-center justify-center hover:border-[var(--tdg-amber)] transition-colors"
                   data-ocid="product_detail.qty_increase.button"
                 >
                   <Plus size={16} />
@@ -456,9 +479,9 @@ export default function ProductDetailPage() {
               colourOpts.length > 0) && (
               <div
                 id="frame-selection-section"
-                className="mb-4 border-2 border-[#FED100] rounded-xl overflow-hidden"
+                className="mb-4 border-2 border-[var(--tdg-amber)] rounded-xl overflow-hidden"
               >
-                <div className="w-full flex items-center justify-between px-4 py-3 bg-[#FED100]/10 text-sm font-semibold text-[#212121]">
+                <div className="w-full flex items-center justify-between px-4 py-3 bg-[var(--tdg-amber)]/10 text-sm font-semibold text-[var(--tdg-dark)]">
                   <span>
                     🖼️ Frame Customization{" "}
                     <span className="text-red-500">*</span>
@@ -468,79 +491,58 @@ export default function ProductDetailPage() {
                   </span>
                 </div>
                 <div className="p-4 space-y-4">
-                  {/* Frame Colour Selection */}
+                  {/* Frame Colour */}
                   {colourOpts.length > 0 && (
-                    <>
-                      <div>
-                        <div className="text-xs font-semibold text-gray-600 mb-2">
-                          Frame Colour
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {colourOpts.map((opt) => (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              onClick={() => {
-                                playClick();
-                                setFrameCustomColour(
-                                  frameCustomColour === opt.name
-                                    ? ""
-                                    : opt.name,
-                                );
-                              }}
-                              className={`flex flex-col items-center rounded-xl border-2 overflow-hidden transition-all ${
-                                frameCustomColour === opt.name
-                                  ? "border-[#FED100] shadow-md scale-[1.03]"
-                                  : "border-gray-200 hover:border-[#FED100]/60"
-                              }`}
-                              style={{ minWidth: 110 }}
-                            >
-                              {opt.image ? (
-                                <div className="relative w-full group/img">
-                                  <img
-                                    src={opt.image}
-                                    alt={opt.name}
-                                    className="w-full object-cover"
-                                    style={{ height: 110 }}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setLightboxSrc(opt.image ?? null);
-                                      setLightboxName(opt.name);
-                                    }}
-                                    className="absolute bottom-0 inset-x-0 flex items-center justify-center gap-1 bg-black/60 text-white text-xs py-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity"
-                                  >
-                                    👁 View
-                                  </button>
-                                </div>
-                              ) : (
-                                <div
-                                  className="w-full bg-gray-100 flex items-center justify-center text-xs text-gray-500"
-                                  style={{ height: 110 }}
-                                >
-                                  Colour
-                                </div>
-                              )}
-                              <span className="text-xs font-medium px-1 py-1 text-center">
-                                {opt.name}
-                              </span>
-                              {(opt.addonPrice ?? 0) > 0 && (
-                                <span className="text-[10px] text-[#b38b00] pb-1">
-                                  +&#x20b9;{opt.addonPrice}
-                                </span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                        {isBW && (
-                          <p className="text-xs text-amber-600 mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                            ℹ️ Some options may not be available with Black/White
-                            colour
-                          </p>
-                        )}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-bold text-[var(--tdg-dark)]">
+                          Frame Colour <span className="text-red-500">*</span>
+                        </span>
+                        <span
+                          className={`text-sm font-semibold ${frameCustomColour ? "text-[#b38b00]" : "text-gray-400 font-normal"}`}
+                        >
+                          {frameCustomColour || "Select a colour"}
+                        </span>
                       </div>
+                      <div className="flex flex-wrap gap-2">
+                        {colourOpts.map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              playClick();
+                              setFrameCustomColour(
+                                frameCustomColour === opt.name ? "" : opt.name,
+                              );
+                            }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 text-sm font-medium transition-all ${
+                              frameCustomColour === opt.name
+                                ? "border-[var(--tdg-amber)] bg-[var(--tdg-amber)]/20 text-[var(--tdg-dark)] font-bold shadow-[0_0_0_2px_var(--tdg-amber)]"
+                                : "border-gray-300 text-gray-600 hover:border-[var(--tdg-amber)]/60"
+                            }`}
+                          >
+                            {opt.image && (
+                              <img
+                                src={opt.image}
+                                alt={opt.name}
+                                className="w-6 h-6 rounded object-cover border border-gray-200 flex-shrink-0"
+                              />
+                            )}
+                            <span>{opt.name}</span>
+                            {(opt.addonPrice ?? 0) > 0 && (
+                              <span className="text-[10px] text-[#b38b00]">
+                                +₹{opt.addonPrice}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      {isBW && (
+                        <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+                          ⚠️ Some options may not be available with Black/White
+                          colour
+                        </p>
+                      )}
                       {frameErrors.colour && (
                         <p
                           className="text-red-500 text-xs mt-1"
@@ -549,9 +551,8 @@ export default function ProductDetailPage() {
                           {frameErrors.colour}
                         </p>
                       )}
-                    </>
+                    </div>
                   )}
-
                   {designOpts.length > 0 && (
                     <>
                       <div>
@@ -585,8 +586,8 @@ export default function ProductDetailPage() {
                                   incompatible
                                     ? "border-gray-200 opacity-50 cursor-not-allowed"
                                     : frameCustomDesign === opt.name
-                                      ? "border-[#FED100] shadow-md scale-[1.03]"
-                                      : "border-gray-200 hover:border-[#FED100]/60"
+                                      ? "border-[var(--tdg-amber)] shadow-md scale-[1.03]"
+                                      : "border-gray-200 hover:border-[var(--tdg-amber)]/60"
                                 }`}
                                 style={{ minWidth: 110 }}
                               >
@@ -697,8 +698,8 @@ export default function ProductDetailPage() {
                                   incompatible
                                     ? "border-gray-200 opacity-50 cursor-not-allowed"
                                     : frameCustomStyle === opt.name
-                                      ? "border-[#FED100] shadow-md scale-[1.03]"
-                                      : "border-gray-200 hover:border-[#FED100]/60"
+                                      ? "border-[var(--tdg-amber)] shadow-md scale-[1.03]"
+                                      : "border-gray-200 hover:border-[var(--tdg-amber)]/60"
                                 }`}
                                 style={{ minWidth: 110 }}
                               >
@@ -777,7 +778,7 @@ export default function ProductDetailPage() {
                     </>
                   )}
                   {frameAddon > 0 && (
-                    <div className="bg-[#FED100]/10 border border-[#FED100]/30 rounded-xl p-3">
+                    <div className="bg-[var(--tdg-amber)]/10 border border-[var(--tdg-amber)]/30 rounded-xl p-3">
                       <span className="text-sm font-semibold text-[#7a6600]">
                         Frame Add-on: +&#x20b9;{frameAddon}
                       </span>
@@ -795,7 +796,7 @@ export default function ProductDetailPage() {
                 addToCart();
               }}
               data-ocid="product_detail.add_to_cart.button"
-              className="w-full bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-base mb-3"
+              className="w-full bg-[var(--tdg-amber)] hover:bg-[#e6bc00] text-[var(--tdg-dark)] font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-base mb-3"
             >
               <ShoppingCart size={20} /> Add to Cart &amp; Proceed
             </button>
@@ -807,7 +808,7 @@ export default function ProductDetailPage() {
                 setCustomFrameOpen(true);
               }}
               data-ocid="product_detail.custom_frame.button"
-              className="w-full border-2 border-[#FED100] text-[#212121] font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm hover:bg-[#FED100]/10 mb-4"
+              className="w-full border-2 border-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm hover:bg-[var(--tdg-amber)]/10 mb-4"
             >
               Need a Custom Size? Order Custom Frame
             </button>
@@ -834,12 +835,12 @@ export default function ProductDetailPage() {
 
         {/* Reviews Section */}
         <section className="mb-12">
-          <h2 className="font-playfair text-2xl font-bold text-[#212121] mb-6">
+          <h2 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)] mb-6">
             Customer Reviews
           </h2>
           {activeReviews.length === 0 ? (
             <div
-              className="bg-white rounded-xl border border-[#D6D6D6] p-8 text-center text-gray-400"
+              className="bg-white rounded-xl border border-[var(--tdg-light)] p-8 text-center text-gray-400"
               data-ocid="product_detail.reviews.empty_state"
             >
               <Star size={32} className="mx-auto mb-2 opacity-30" />
@@ -850,7 +851,7 @@ export default function ProductDetailPage() {
               {activeReviews.map((review, idx) => (
                 <div
                   key={review.id}
-                  className="bg-white rounded-xl border border-[#D6D6D6] p-4"
+                  className="bg-white rounded-xl border border-[var(--tdg-light)] p-4"
                   data-ocid={`product_detail.reviews.item.${idx + 1}`}
                 >
                   <div className="flex items-start gap-3">
@@ -873,7 +874,7 @@ export default function ProductDetailPage() {
                               size={12}
                               className={
                                 n <= review.rating
-                                  ? "fill-[#FED100] text-[#FED100]"
+                                  ? "fill-[#FED100] text-[var(--tdg-amber)]"
                                   : "fill-gray-200 text-gray-200"
                               }
                             />
@@ -962,14 +963,14 @@ export default function ProductDetailPage() {
       {/* Sticky Add-to-Cart bar on mobile */}
       {stickyBarVisible && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-[#D6D6D6] px-4 py-3 flex items-center gap-3 shadow-lg"
+          className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-[var(--tdg-light)] px-4 py-3 flex items-center gap-3 shadow-lg"
           style={{ animation: "slideUp 0.25s ease" }}
         >
           <div className="flex-1 min-w-0">
             <div className="text-xs font-medium text-gray-700 truncate">
               {product.name}
             </div>
-            <div className="text-base font-bold text-[#212121]">
+            <div className="text-base font-bold text-[var(--tdg-dark)]">
               ₹{product.price + frameAddon}
             </div>
           </div>
@@ -979,7 +980,7 @@ export default function ProductDetailPage() {
               playClick();
               addToCart();
             }}
-            className="bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm flex-shrink-0"
+            className="bg-[var(--tdg-amber)] hover:bg-[#e6bc00] text-[var(--tdg-dark)] font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm flex-shrink-0"
             data-ocid="product_detail.sticky_add_to_cart.button"
           >
             <ShoppingCart size={16} /> Add to Cart

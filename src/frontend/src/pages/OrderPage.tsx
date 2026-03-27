@@ -87,23 +87,23 @@ export default function OrderPage() {
 
   if (step === 4) {
     return (
-      <div className="min-h-screen bg-[#f5f5f5] font-inter">
+      <div className="min-h-screen bg-[var(--tdg-bg)] font-inter">
         <Navbar />
         <div className="max-w-lg mx-auto px-4 py-16 text-center">
-          <div className="bg-white rounded-2xl shadow-sm border border-[#D6D6D6] p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-[var(--tdg-light)] p-8">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={32} className="text-green-600" />
             </div>
-            <h2 className="font-playfair text-2xl font-bold text-[#212121] mb-2">
+            <h2 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)] mb-2">
               Order Placed!
             </h2>
             <p className="text-gray-600 mb-4">
-              Your order has been received. Please complete the 30% advance
-              payment.
+              {settings.orderConfirmationMessage ||
+                "Your order has been received. Please complete the 30% advance payment."}
             </p>
-            <div className="bg-[#FFEE32]/20 rounded-lg p-4 mb-4">
+            <div className="bg-[var(--tdg-yellow)]/20 rounded-lg p-4 mb-4">
               <div className="text-sm text-gray-500 mb-1">Your Order ID</div>
-              <div className="font-mono font-bold text-2xl text-[#212121]">
+              <div className="font-mono font-bold text-2xl text-[var(--tdg-dark)]">
                 {orderId}
               </div>
               <div className="text-xs text-gray-500 mt-1">
@@ -137,7 +137,7 @@ export default function OrderPage() {
                 </span>
               </div>
             </div>
-            <div className="bg-[#FED100]/10 border border-[#FED100] rounded-lg p-4 mb-4 text-left">
+            <div className="bg-[var(--tdg-amber)]/10 border border-[var(--tdg-amber)] rounded-lg p-4 mb-4 text-left">
               <div className="font-semibold text-sm text-gray-800 mb-2">
                 Pay &#x20b9;{advance} advance to:
               </div>
@@ -191,7 +191,7 @@ export default function OrderPage() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/track" })}
-                className="flex-1 bg-[#FED100] text-[#212121] rounded-lg py-2.5 text-sm font-bold hover:bg-[#e6bc00]"
+                className="flex-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] rounded-lg py-2.5 text-sm font-bold hover:bg-[#e6bc00]"
               >
                 Track Order
               </button>
@@ -204,7 +204,7 @@ export default function OrderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] font-inter">
+    <div className="min-h-screen bg-[var(--tdg-bg)] font-inter">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-10">
         <div className="flex items-center gap-2 mb-8 overflow-x-auto">
@@ -215,7 +215,7 @@ export default function OrderPage() {
                   i < step
                     ? "bg-green-500 text-white"
                     : i === step
-                      ? "bg-[#FED100] text-[#212121]"
+                      ? "bg-[var(--tdg-amber)] text-[var(--tdg-dark)]"
                       : "bg-gray-200 text-gray-500"
                 }`}
               >
@@ -233,14 +233,14 @@ export default function OrderPage() {
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-[#D6D6D6] p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-[var(--tdg-light)] p-6">
           {step === 0 && (
             <div>
-              <h2 className="font-playfair text-xl font-bold text-[#212121] mb-4">
+              <h2 className="font-playfair text-xl font-bold text-[var(--tdg-dark)] mb-4">
                 Select Size &amp; Style
               </h2>
-              <div className="bg-[#FFEE32]/20 rounded-lg p-4 mb-4">
-                <div className="font-semibold text-[#212121]">
+              <div className="bg-[var(--tdg-yellow)]/20 rounded-lg p-4 mb-4">
+                <div className="font-semibold text-[var(--tdg-dark)]">
                   {product.name} {product.size}
                 </div>
                 <div className="text-sm text-gray-500 mt-1">
@@ -255,7 +255,7 @@ export default function OrderPage() {
                       type="button"
                       key={t}
                       onClick={() => setThickness(t)}
-                      className={`border-2 rounded-lg p-4 text-center transition-colors ${thickness === t ? "border-[#FED100] bg-[#FED100]/10" : "border-[#D6D6D6] hover:border-gray-300"}`}
+                      className={`border-2 rounded-lg p-4 text-center transition-colors ${thickness === t ? "border-[var(--tdg-amber)] bg-[var(--tdg-amber)]/10" : "border-[var(--tdg-light)] hover:border-gray-300"}`}
                     >
                       <div className="font-semibold">{t} thick</div>
                       {t === '1.5"' && (
@@ -270,7 +270,7 @@ export default function OrderPage() {
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Price</span>
-                  <span className="font-bold text-[#212121] text-lg">
+                  <span className="font-bold text-[var(--tdg-dark)] text-lg">
                     &#x20b9;{price}
                   </span>
                 </div>
@@ -284,7 +284,7 @@ export default function OrderPage() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="w-full bg-[#FED100] text-[#212121] py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
+                className="w-full bg-[var(--tdg-amber)] text-[var(--tdg-dark)] py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
               >
                 Continue
               </button>
@@ -293,12 +293,12 @@ export default function OrderPage() {
 
           {step === 1 && (
             <div>
-              <h2 className="font-playfair text-xl font-bold text-[#212121] mb-4">
+              <h2 className="font-playfair text-xl font-bold text-[var(--tdg-dark)] mb-4">
                 Upload Your Photo
               </h2>
               <button
                 type="button"
-                className="border-2 border-dashed border-[#D6D6D6] rounded-xl p-10 text-center cursor-pointer hover:border-[#FED100] transition-colors mb-4 w-full"
+                className="border-2 border-dashed border-[var(--tdg-light)] rounded-xl p-10 text-center cursor-pointer hover:border-[var(--tdg-amber)] transition-colors mb-4 w-full"
                 onClick={() => document.getElementById("photo-input")?.click()}
               >
                 <Upload size={32} className="mx-auto mb-2 text-gray-400" />
@@ -333,7 +333,7 @@ export default function OrderPage() {
                 <button
                   type="button"
                   onClick={() => setStep(0)}
-                  className="flex-1 border border-[#D6D6D6] py-3 rounded-lg font-medium hover:bg-gray-50"
+                  className="flex-1 border border-[var(--tdg-light)] py-3 rounded-lg font-medium hover:bg-gray-50"
                 >
                   Back
                 </button>
@@ -341,7 +341,7 @@ export default function OrderPage() {
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={!photoRef && !whatsappLater}
-                  className="flex-1 bg-[#FED100] text-[#212121] py-3 rounded-lg font-bold hover:bg-[#e6bc00] disabled:opacity-50"
+                  className="flex-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] py-3 rounded-lg font-bold hover:bg-[#e6bc00] disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -351,7 +351,7 @@ export default function OrderPage() {
 
           {step === 2 && (
             <div>
-              <h2 className="font-playfair text-xl font-bold text-[#212121] mb-4">
+              <h2 className="font-playfair text-xl font-bold text-[var(--tdg-dark)] mb-4">
                 Your Details
               </h2>
               <div className="space-y-4 mb-6">
@@ -363,7 +363,7 @@ export default function OrderPage() {
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full border border-[#D6D6D6] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#FED100]"
+                    className="w-full border border-[var(--tdg-light)] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[var(--tdg-amber)]"
                     placeholder="Your name"
                   />
                 </div>
@@ -375,7 +375,7 @@ export default function OrderPage() {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full border border-[#D6D6D6] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#FED100]"
+                    className="w-full border border-[var(--tdg-light)] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[var(--tdg-amber)]"
                     placeholder="10-digit mobile number"
                     maxLength={10}
                   />
@@ -387,7 +387,7 @@ export default function OrderPage() {
                   <select
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full border border-[#D6D6D6] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#FED100]"
+                    className="w-full border border-[var(--tdg-light)] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[var(--tdg-amber)]"
                   >
                     <option value="">Select your city</option>
                     {pickupCities.map((c) => (
@@ -402,7 +402,7 @@ export default function OrderPage() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex-1 border border-[#D6D6D6] py-3 rounded-lg font-medium hover:bg-gray-50"
+                  className="flex-1 border border-[var(--tdg-light)] py-3 rounded-lg font-medium hover:bg-gray-50"
                 >
                   Back
                 </button>
@@ -410,7 +410,7 @@ export default function OrderPage() {
                   type="button"
                   onClick={() => setStep(3)}
                   disabled={!customerName || phone.length < 10 || !city}
-                  className="flex-1 bg-[#FED100] text-[#212121] py-3 rounded-lg font-bold hover:bg-[#e6bc00] disabled:opacity-50"
+                  className="flex-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] py-3 rounded-lg font-bold hover:bg-[#e6bc00] disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -420,7 +420,7 @@ export default function OrderPage() {
 
           {step === 3 && (
             <div>
-              <h2 className="font-playfair text-xl font-bold text-[#212121] mb-4">
+              <h2 className="font-playfair text-xl font-bold text-[var(--tdg-dark)] mb-4">
                 Order Summary
               </h2>
               <div className="space-y-2 text-sm mb-4">
@@ -440,7 +440,7 @@ export default function OrderPage() {
                   >
                     <span className="text-gray-500">{k}</span>
                     <span
-                      className={`font-medium ${k === "30% Advance" ? "text-[#b38b00] font-bold" : k === "Total Price" ? "text-[#212121] font-bold text-lg" : ""}`}
+                      className={`font-medium ${k === "30% Advance" ? "text-[#b38b00] font-bold" : k === "Total Price" ? "text-[var(--tdg-dark)] font-bold text-lg" : ""}`}
                     >
                       {v}
                     </span>
@@ -450,12 +450,12 @@ export default function OrderPage() {
               <button
                 type="button"
                 onClick={() => setShowPayment(true)}
-                className="w-full border-2 border-[#FED100] text-[#b38b00] py-3 rounded-lg font-semibold hover:bg-[#FED100]/10 mb-3"
+                className="w-full border-2 border-[var(--tdg-amber)] text-[#b38b00] py-3 rounded-lg font-semibold hover:bg-[var(--tdg-amber)]/10 mb-3"
               >
                 View Payment Details
               </button>
               {showPayment && (
-                <div className="bg-[#FED100]/10 border border-[#FED100] rounded-lg p-4 mb-4 text-sm">
+                <div className="bg-[var(--tdg-amber)]/10 border border-[var(--tdg-amber)] rounded-lg p-4 mb-4 text-sm">
                   <div className="font-semibold mb-2">
                     Pay &#x20b9;{advance} via:
                   </div>
@@ -493,7 +493,7 @@ export default function OrderPage() {
                       <img
                         src={settings.qrCodeImage}
                         alt="Payment QR Code"
-                        className="mx-auto rounded-lg border border-[#FED100]/40"
+                        className="mx-auto rounded-lg border border-[var(--tdg-amber)]/40"
                         style={{ maxWidth: 200 }}
                       />
                     </div>
@@ -508,14 +508,14 @@ export default function OrderPage() {
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="flex-1 border border-[#D6D6D6] py-3 rounded-lg font-medium hover:bg-gray-50"
+                  className="flex-1 border border-[var(--tdg-light)] py-3 rounded-lg font-medium hover:bg-gray-50"
                 >
                   Back
                 </button>
                 <button
                   type="button"
                   onClick={placeOrder}
-                  className="flex-1 bg-[#FED100] text-[#212121] py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
+                  className="flex-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
                 >
                   Place Order
                 </button>

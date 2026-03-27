@@ -38,7 +38,7 @@ export default function EntrancePopup() {
             </button>
           </div>
         ) : (
-          <div className="bg-[#212121] text-white text-center py-6 px-8 relative">
+          <div className="bg-[var(--tdg-dark)] text-white text-center py-6 px-8 relative">
             <button
               type="button"
               onClick={() => setVisible(false)}
@@ -46,7 +46,7 @@ export default function EntrancePopup() {
             >
               <X size={20} />
             </button>
-            <Tag size={32} className="mx-auto mb-3 text-[#FED100]" />
+            <Tag size={32} className="mx-auto mb-3 text-[var(--tdg-amber)]" />
             <p className="text-xs uppercase tracking-widest text-gray-400 mb-1">
               Special Offer
             </p>
@@ -62,7 +62,7 @@ export default function EntrancePopup() {
               <p className="text-sm text-gray-600 mb-3">
                 Use code at checkout:
               </p>
-              <div className="inline-block bg-[#FFEE32]/30 border-2 border-dashed border-[#FED100] rounded-lg px-6 py-3 mb-3">
+              <div className="inline-block bg-[var(--tdg-yellow)]/30 border-2 border-dashed border-[var(--tdg-amber)] rounded-lg px-6 py-3 mb-3">
                 <span className="font-mono font-bold text-xl text-[#b38b00] tracking-widest">
                   {settings.popupCode}
                 </span>
@@ -71,7 +71,7 @@ export default function EntrancePopup() {
           )}
           {settings.popupImage && settings.popupText && (
             <div className="mb-3">
-              <h3 className="font-bold text-lg text-[#212121]">
+              <h3 className="font-bold text-lg text-[var(--tdg-dark)]">
                 {settings.popupText}
               </h3>
               {settings.popupSubtext && (
@@ -80,7 +80,7 @@ export default function EntrancePopup() {
                 </p>
               )}
               {settings.popupCode && (
-                <div className="inline-block bg-[#FFEE32]/30 border-2 border-dashed border-[#FED100] rounded-lg px-4 py-2 mt-2">
+                <div className="inline-block bg-[var(--tdg-yellow)]/30 border-2 border-dashed border-[var(--tdg-amber)] rounded-lg px-4 py-2 mt-2">
                   <span className="font-mono font-bold text-lg text-[#b38b00] tracking-widest">
                     {settings.popupCode}
                   </span>
@@ -91,7 +91,7 @@ export default function EntrancePopup() {
           <button
             type="button"
             onClick={() => setVisible(false)}
-            className="mt-2 w-full bg-[#FED100] hover:bg-[#e6bc00] text-[#212121] font-semibold py-3 rounded-lg transition-colors"
+            className="mt-2 w-full bg-[var(--tdg-amber)] hover:bg-[#e6bc00] text-[var(--tdg-dark)] font-semibold py-3 rounded-lg transition-colors"
           >
             Shop Now
           </button>

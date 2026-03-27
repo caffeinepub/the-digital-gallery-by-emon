@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useData } from "../lib/DataContext";
+import { getBackendActor, orderFromBackend } from "../lib/backendOrders";
 import {
   type Banner,
   type FinanceRecord,
@@ -90,6 +91,7 @@ export default function AdminPage() {
     setSuppliers,
     setSettings,
     setReviews,
+    refreshOrdersFromBackend,
   } = useData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -103,13 +105,13 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <div className="min-h-screen bg-[#212121] flex items-center justify-center px-4 font-inter">
+      <div className="min-h-screen bg-[var(--tdg-dark)] flex items-center justify-center px-4 font-inter">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8">
           <div className="text-center mb-6">
-            <div className="w-14 h-14 bg-[#FED100] rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Lock size={24} className="text-[#212121]" />
+            <div className="w-14 h-14 bg-[var(--tdg-amber)] rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Lock size={24} className="text-[var(--tdg-dark)]" />
             </div>
-            <h1 className="font-playfair text-2xl font-bold text-[#212121]">
+            <h1 className="font-playfair text-2xl font-bold text-[var(--tdg-dark)]">
               Admin Login
             </h1>
             <p className="text-gray-500 text-sm mt-1">
@@ -122,13 +124,13 @@ export default function AdminPage() {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && login()}
             placeholder="Enter admin password"
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 focus:outline-none focus:border-[#FED100]"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 mb-3 focus:outline-none focus:border-[var(--tdg-amber)]"
           />
           {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
           <button
             type="button"
             onClick={login}
-            className="w-full bg-[#FED100] text-[#212121] py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
+            className="w-full bg-[var(--tdg-amber)] text-[var(--tdg-dark)] py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
           >
             Login
           </button>
@@ -160,13 +162,13 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50 font-inter flex">
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-56 bg-[#212121] text-white flex flex-col transition-transform ${
+        className={`fixed inset-y-0 left-0 z-30 w-56 bg-[var(--tdg-dark)] text-white flex flex-col transition-transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 md:relative md:flex`}
       >
         <div className="p-4 border-b border-[#333]">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-[#FED100] rounded flex items-center justify-center font-bold text-sm text-[#212121]">
+            <div className="w-9 h-9 bg-[var(--tdg-amber)] rounded flex items-center justify-center font-bold text-sm text-[var(--tdg-dark)]">
               {settings.logoText}
             </div>
             <div className="text-sm font-semibold leading-tight">
@@ -187,7 +189,7 @@ export default function AdminPage() {
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
                 tab === key
-                  ? "bg-[#FED100] text-[#212121] font-bold"
+                  ? "bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold"
                   : "text-gray-400 hover:text-white hover:bg-[#2a2c2a]"
               }`}
             >
@@ -257,6 +259,7 @@ export default function AdminPage() {
               onSave={(u) => {
                 setOrders(u);
               }}
+              onRefresh={refreshOrdersFromBackend}
             />
           )}
           {tab === "inventory" && (
@@ -385,7 +388,7 @@ function DashboardTab({
                       {o.productName}
                     </td>
                     <td className="py-2">
-                      <span className="bg-[#FED100]/20 text-[#7a6600] text-xs px-2 py-0.5 rounded-full">
+                      <span className="bg-[var(--tdg-amber)]/20 text-[#7a6600] text-xs px-2 py-0.5 rounded-full">
                         {STATUS_LABELS[o.status]}
                       </span>
                     </td>
@@ -403,23 +406,100 @@ function OrdersTab({
   orders,
   settings,
   onSave,
-}: { orders: Order[]; settings: SettingsType; onSave: (o: Order[]) => void }) {
+  onRefresh,
+}: {
+  orders: Order[];
+  settings: SettingsType;
+  onSave: (o: Order[]) => void;
+  onRefresh?: () => Promise<void>;
+}) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const { backendActor } = useData();
 
-  function updateOrder(id: string, changes: Partial<Order>) {
-    onSave(orders.map((o) => (o.id === id ? { ...o, ...changes } : o)));
+  function printOrder(order: Order) {
+    const win = window.open("", "_blank", "width=600,height=700");
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>Order ${order.id}</title>
+    <style>body{font-family:Arial,sans-serif;padding:24px;color:#212121;max-width:560px;margin:0 auto}
+    h1{font-size:18px;margin-bottom:4px}.badge{background:#FED100;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:bold}
+    table{width:100%;border-collapse:collapse;margin-top:12px}td{padding:6px 8px;border-bottom:1px solid #eee;font-size:13px}
+    td:first-child{color:#666;width:40%}.total{font-size:16px;font-weight:bold;color:#b38b00}
+    @media print{button{display:none}}</style></head><body>
+    <h1>Order Receipt</h1><span class="badge">${order.id}</span>
+    <table>
+      <tr><td>Customer</td><td>${order.customerName}</td></tr>
+      <tr><td>Phone</td><td>${order.phone}</td></tr>
+      <tr><td>Product</td><td>${order.productName}</td></tr>
+      <tr><td>Size / Frame</td><td>${order.size || "-"}</td></tr>
+      <tr><td>Frame Colour</td><td>${order.frameColour || "-"}</td></tr>
+      <tr><td>Thickness</td><td>${order.thickness}</td></tr>
+      <tr><td>Quantity</td><td>${order.quantity}</td></tr>
+      <tr><td>Price</td><td class="total">₹${order.price}</td></tr>
+      <tr><td>Delivery Charge</td><td>₹${order.deliveryCharge}</td></tr>
+      <tr><td>Total Payable</td><td class="total">₹${order.price + order.deliveryCharge}</td></tr>
+      <tr><td>Location</td><td>${order.pickupCity}</td></tr>
+      <tr><td>Status</td><td>${order.status}</td></tr>
+      <tr><td>Expected Delivery</td><td>${order.expectedDelivery}</td></tr>
+      <tr><td>Order Date</td><td>${new Date(order.createdAt).toLocaleString("en-IN")}</td></tr>
+    </table>
+    <br/><button onclick="window.print()">🖨️ Print</button>
+    </body></html>`);
+    win.document.close();
+    win.focus();
   }
 
-  function deleteOrder(id: string) {
-    if (window.confirm("Delete this order? This cannot be undone.")) {
-      onSave(orders.filter((o) => o.id !== id));
+  async function updateOrder(id: string, changes: Partial<Order>) {
+    const updated = orders.map((o) => (o.id === id ? { ...o, ...changes } : o));
+    onSave(updated);
+    if (backendActor) {
+      try {
+        const update: {
+          status: [] | [string];
+          deliveryCharge: [] | [bigint];
+          expectedDelivery: [] | [string];
+        } = {
+          status: changes.status ? [changes.status] : [],
+          deliveryCharge:
+            changes.deliveryCharge !== undefined
+              ? [BigInt(Math.round(changes.deliveryCharge))]
+              : [],
+          expectedDelivery: changes.expectedDelivery
+            ? [changes.expectedDelivery]
+            : [],
+        };
+        await (backendActor as any).updateOrder(id, update);
+      } catch (err) {
+        console.error("Backend updateOrder failed:", err);
+      }
     }
   }
 
-  function clearAllOrders() {
+  async function deleteOrder(id: string) {
+    if (window.confirm("Delete this order? This cannot be undone.")) {
+      onSave(orders.filter((o) => o.id !== id));
+      if (backendActor) {
+        try {
+          await (backendActor as any).deleteOrder(id);
+          if (onRefresh) await onRefresh();
+        } catch (err) {
+          console.error("Backend deleteOrder failed:", err);
+        }
+      }
+    }
+  }
+
+  async function clearAllOrders() {
     if (window.confirm("Clear ALL orders? This cannot be undone.")) {
       onSave([]);
+      if (backendActor) {
+        try {
+          await (backendActor as any).clearAllOrders();
+          if (onRefresh) await onRefresh();
+        } catch (err) {
+          console.error("Backend clearAllOrders failed:", err);
+        }
+      }
     }
   }
 
@@ -467,7 +547,7 @@ function OrdersTab({
             type="button"
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-3 py-1 rounded-full text-xs font-medium ${filter === s ? "bg-[#FED100] text-[#212121] font-bold" : "bg-white border text-gray-600 hover:border-[#FED100]"}`}
+            className={`px-3 py-1 rounded-full text-xs font-medium ${filter === s ? "bg-[var(--tdg-amber)] text-[var(--tdg-dark)] font-bold" : "bg-white border text-gray-600 hover:border-[var(--tdg-amber)]"}`}
           >
             {s === "all" ? "All" : STATUS_LABELS[s as Order["status"]]}
           </button>
@@ -604,6 +684,14 @@ function OrdersTab({
                 data-ocid={"orders.whatsapp.button"}
               >
                 <MessageCircle size={13} /> Send WhatsApp
+              </button>
+              <button
+                type="button"
+                onClick={() => printOrder(order)}
+                className="flex items-center gap-1.5 text-xs bg-blue-50 border border-blue-200 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
+                data-ocid={"orders.print_button"}
+              >
+                🖨️ Print
               </button>
               <button
                 type="button"
@@ -814,7 +902,7 @@ function ProductsTab({
           {categories.map((cat) => (
             <span
               key={cat}
-              className="flex items-center gap-1 bg-[#FED100]/20 text-[#7a6600] text-xs px-3 py-1.5 rounded-full capitalize font-medium"
+              className="flex items-center gap-1 bg-[var(--tdg-amber)]/20 text-[#7a6600] text-xs px-3 py-1.5 rounded-full capitalize font-medium"
             >
               {cat}
               <button
@@ -839,7 +927,7 @@ function ProductsTab({
           <button
             type="button"
             onClick={addCategory}
-            className="bg-[#FED100] text-[#212121] px-4 py-2 rounded text-sm font-bold hover:bg-[#e6bc00]"
+            className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-4 py-2 rounded text-sm font-bold hover:bg-[#e6bc00]"
           >
             <Plus size={16} />
           </button>
@@ -848,7 +936,7 @@ function ProductsTab({
 
       {/* Product Form */}
       {(showAdd || editId) && (
-        <div className="bg-white rounded-xl border-2 border-[#FED100] p-5 mb-5">
+        <div className="bg-white rounded-xl border-2 border-[var(--tdg-amber)] p-5 mb-5">
           <h3 className="font-semibold text-sm mb-4">
             {showAdd ? "Add New Product" : "Edit Product"}
           </h3>
@@ -942,7 +1030,7 @@ function ProductsTab({
                 {(form.highlights || []).map((h: string, hi: number) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: static list
                   <div key={hi} className="flex gap-2 items-center">
-                    <span className="text-[#FED100] text-sm">✓</span>
+                    <span className="text-[var(--tdg-amber)] text-sm">✓</span>
                     <input
                       value={h}
                       onChange={(e) => {
@@ -950,7 +1038,7 @@ function ProductsTab({
                         updated[hi] = e.target.value;
                         setForm({ ...form, highlights: updated });
                       }}
-                      className="flex-1 border rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#FED100]"
+                      className="flex-1 border rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[var(--tdg-amber)]"
                       placeholder="e.g. Premium quality wood frame"
                     />
                     <button
@@ -1035,7 +1123,7 @@ function ProductsTab({
                           </button>
                         </div>
                       ) : (
-                        <label className="cursor-pointer w-16 h-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center hover:border-[#FED100] transition-colors">
+                        <label className="cursor-pointer w-16 h-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center hover:border-[var(--tdg-amber)] transition-colors">
                           <Upload size={14} className="text-gray-400" />
                           <input
                             type="file"
@@ -1070,7 +1158,7 @@ function ProductsTab({
             <button
               type="button"
               onClick={saveProduct}
-              className="bg-[#FED100] text-[#212121] px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00] flex items-center gap-2"
+              className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00] flex items-center gap-2"
             >
               <Save size={15} /> Save Product
             </button>
@@ -1094,7 +1182,7 @@ function ProductsTab({
         <button
           type="button"
           onClick={startAdd}
-          className="flex items-center gap-2 bg-[#FED100] text-[#212121] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
+          className="flex items-center gap-2 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
         >
           <Plus size={16} /> Add Product
         </button>
@@ -1235,7 +1323,7 @@ function FinanceTab({
         <button
           type="button"
           onClick={addRecord}
-          className="mt-3 bg-[#FED100] text-[#212121] px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
+          className="mt-3 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
         >
           Add Record
         </button>
@@ -1365,7 +1453,7 @@ function SuppliersTab({
           <button
             type="button"
             onClick={addSupplier}
-            className="bg-[#FED100] text-[#212121] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
+            className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
           >
             <Plus size={16} />
           </button>
@@ -1376,7 +1464,7 @@ function SuppliersTab({
           <button
             type="button"
             key={s.id}
-            className={`bg-white rounded-xl border p-4 cursor-pointer text-left w-full ${selected === s.id ? "border-[#FED100]" : "border-gray-100 hover:border-gray-300"}`}
+            className={`bg-white rounded-xl border p-4 cursor-pointer text-left w-full ${selected === s.id ? "border-[var(--tdg-amber)]" : "border-gray-100 hover:border-gray-300"}`}
             onClick={() => setSelected(selected === s.id ? null : s.id)}
           >
             <div className="flex justify-between items-start">
@@ -1431,7 +1519,7 @@ function SuppliersTab({
                   <button
                     type="button"
                     onClick={addTransaction}
-                    className="bg-[#FED100] text-[#212121] px-3 py-1.5 rounded text-xs font-bold"
+                    className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-3 py-1.5 rounded text-xs font-bold"
                   >
                     Add
                   </button>
@@ -1534,7 +1622,7 @@ function SettingsTab({
               onClick={() => setForm({ ...form, theme: t })}
               className={`flex-1 py-3 rounded-lg border-2 font-semibold text-sm capitalize transition-colors ${
                 form.theme === t
-                  ? "border-[#FED100] bg-[#FED100]/10 text-[#7a6600]"
+                  ? "border-[var(--tdg-amber)] bg-[var(--tdg-amber)]/10 text-[#7a6600]"
                   : "border-gray-200 text-gray-500 hover:border-gray-300"
               }`}
             >
@@ -1593,6 +1681,76 @@ function SettingsTab({
         </div>
       </div>
 
+      {/* Footer Background Photo */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-1">Footer Background Photo</h3>
+        <p className="text-xs text-gray-400 mb-3">
+          Optional background image for the footer / About section. A dark
+          overlay keeps text readable.
+        </p>
+        {form.footerBgImage ? (
+          <div className="flex items-center gap-3 mb-3">
+            <img
+              src={form.footerBgImage}
+              alt="Footer background preview"
+              className="w-24 h-16 object-cover rounded-lg border border-gray-200"
+            />
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, footerBgImage: "" })}
+              className="text-xs text-red-500 hover:text-red-700 font-medium px-3 py-1 border border-red-200 rounded-lg"
+            >
+              Remove
+            </button>
+          </div>
+        ) : null}
+        <label className="flex items-center gap-2 cursor-pointer w-fit">
+          <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Upload Photo
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = (ev) => {
+                const img = new window.Image();
+                img.onload = () => {
+                  const canvas = document.createElement("canvas");
+                  const maxW = 1200;
+                  const scale = img.width > maxW ? maxW / img.width : 1;
+                  canvas.width = img.width * scale;
+                  canvas.height = img.height * scale;
+                  const ctx = canvas.getContext("2d");
+                  if (!ctx) return;
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                  const compressed = canvas.toDataURL("image/jpeg", 0.82);
+                  setForm({ ...form, footerBgImage: compressed });
+                };
+                img.src = ev.target?.result as string;
+              };
+              reader.readAsDataURL(file);
+            }}
+          />
+        </label>
+      </div>
+
       {/* Identity */}
       <div className="bg-white rounded-xl border border-gray-100 p-5">
         <h3 className="font-semibold mb-4">Store Identity</h3>
@@ -1612,7 +1770,7 @@ function SettingsTab({
               <input
                 value={(form as unknown as Record<string, string>)[key] || ""}
                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+                className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
               />
             </div>
           ))}
@@ -1683,7 +1841,7 @@ function SettingsTab({
           onChange={(e) =>
             setForm({ ...form, announcementBar: e.target.value })
           }
-          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
           placeholder="e.g. Free Shipping on orders above ₹999"
         />
       </div>
@@ -1757,7 +1915,7 @@ function SettingsTab({
                 setNewBanner("");
               }
             }}
-            className="bg-[#FED100] text-[#212121] px-4 py-2 rounded text-sm font-bold"
+            className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-4 py-2 rounded text-sm font-bold"
           >
             <Plus size={16} />
           </button>
@@ -1771,7 +1929,7 @@ function SettingsTab({
           <button
             type="button"
             onClick={addAdvancedBanner}
-            className="flex items-center gap-1 bg-[#FED100] text-[#212121] px-3 py-1.5 rounded text-xs font-bold hover:bg-[#e6bc00]"
+            className="flex items-center gap-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-3 py-1.5 rounded text-xs font-bold hover:bg-[#e6bc00]"
           >
             <Plus size={14} /> Add Banner
           </button>
@@ -2077,7 +2235,7 @@ function SettingsTab({
                 setNewCity("");
               }
             }}
-            className="bg-[#FED100] text-[#212121] px-4 py-2 rounded text-sm font-bold"
+            className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-4 py-2 rounded text-sm font-bold"
           >
             <Plus size={16} />
           </button>
@@ -2123,7 +2281,7 @@ function SettingsTab({
           This image will appear in the navbar instead of the logo text
         </p>
         <div className="flex items-center gap-4 flex-wrap">
-          <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors">
+          <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[var(--tdg-amber)] transition-colors">
             <Upload size={14} /> Upload Logo (JPG/PNG)
             <input
               type="file"
@@ -2172,7 +2330,7 @@ function SettingsTab({
           This QR code will be shown in the payment popup
         </p>
         <div className="flex items-center gap-4 flex-wrap">
-          <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors">
+          <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[var(--tdg-amber)] transition-colors">
             <Upload size={14} /> Upload QR Code (JPG/PNG)
             <input
               type="file"
@@ -2273,7 +2431,7 @@ function SettingsTab({
             Up to 5 banners · 1200x628 px · Max 2MB each
           </div>
           <label
-            className={`cursor-pointer inline-flex items-center gap-2 bg-[#FED100]/10 border border-[#FED100]/40 text-[#7a6600] rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#FED100]/20 transition-colors ${(form.heroSlideshow || []).length >= 5 ? "opacity-50 pointer-events-none" : ""}`}
+            className={`cursor-pointer inline-flex items-center gap-2 bg-[var(--tdg-amber)]/10 border border-[var(--tdg-amber)]/40 text-[#7a6600] rounded-lg px-4 py-2 text-sm font-medium hover:bg-[var(--tdg-amber)]/20 transition-colors ${(form.heroSlideshow || []).length >= 5 ? "opacity-50 pointer-events-none" : ""}`}
           >
             <Upload size={14} />{" "}
             {(form.heroSlideshow || []).length >= 5
@@ -2390,7 +2548,7 @@ function SettingsTab({
               <input
                 value={(form as unknown as Record<string, string>)[key] || ""}
                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+                className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
                 placeholder={placeholder}
               />
             </div>
@@ -2404,7 +2562,7 @@ function SettingsTab({
               onChange={(e) =>
                 setForm({ ...form, heroSubtext: e.target.value })
               }
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)] resize-none"
               rows={2}
               placeholder="High quality photo frames, collages & more..."
             />
@@ -2418,9 +2576,27 @@ function SettingsTab({
         <textarea
           value={form.aboutUs || ""}
           onChange={(e) => setForm({ ...form, aboutUs: e.target.value })}
-          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)] resize-none"
           rows={4}
           placeholder="Write about your store..."
+        />
+      </div>
+
+      {/* Order Confirmation Message */}
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <h3 className="font-semibold mb-1">Order Confirmation Message</h3>
+        <p className="text-xs text-gray-400 mb-3">
+          Shown to the customer on the order confirmation page after placing an
+          order.
+        </p>
+        <textarea
+          value={form.orderConfirmationMessage || ""}
+          onChange={(e) =>
+            setForm({ ...form, orderConfirmationMessage: e.target.value })
+          }
+          placeholder="Your order has been received. Please complete the 30% advance payment."
+          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)] resize-none"
+          rows={3}
         />
       </div>
 
@@ -2438,7 +2614,7 @@ function SettingsTab({
           onChange={(e) =>
             setForm({ ...form, whatsappTemplate: e.target.value })
           }
-          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none font-mono"
+          className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)] resize-none font-mono"
           rows={7}
         />
       </div>
@@ -2465,7 +2641,7 @@ function SettingsTab({
                 deliveryLocations: [...(form.deliveryLocations || []), newLoc],
               });
             }}
-            className="flex items-center gap-1 bg-[#FED100] text-[#212121] px-3 py-1.5 rounded text-xs font-bold hover:bg-[#e6bc00]"
+            className="flex items-center gap-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-3 py-1.5 rounded text-xs font-bold hover:bg-[#e6bc00]"
             data-ocid="settings.add_location.button"
           >
             <Plus size={14} /> Add Location
@@ -2559,7 +2735,7 @@ function SettingsTab({
               setForm({ ...form, offerTimerText: e.target.value })
             }
             placeholder="Flash Sale ends in:"
-            className="w-full max-w-xs border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+            className="w-full max-w-xs border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
           />
         </div>
       </div>
@@ -2597,7 +2773,7 @@ function SettingsTab({
             ),
           )}
           {((form as any).ourWorkPhotos || []).length < 20 && (
-            <label className="w-20 h-20 bg-[#FED100]/10 border-2 border-dashed border-[#FED100] rounded-lg flex flex-col items-center justify-center text-xs text-[#b38b00] cursor-pointer hover:bg-[#FED100]/20">
+            <label className="w-20 h-20 bg-[var(--tdg-amber)]/10 border-2 border-dashed border-[var(--tdg-amber)] rounded-lg flex flex-col items-center justify-center text-xs text-[#b38b00] cursor-pointer hover:bg-[var(--tdg-amber)]/20">
               <Upload size={16} className="mb-1" />
               Add Photo
               <input
@@ -2653,7 +2829,7 @@ function SettingsTab({
                   customFrameBaseRateCm: Number(e.target.value),
                 } as any)
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#FED100]"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
             />
           </div>
           <div>
@@ -2675,7 +2851,7 @@ function SettingsTab({
                   customFrameBaseRateInch: Number(e.target.value),
                 } as any)
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#FED100]"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
             />
           </div>
           <div>
@@ -2697,7 +2873,7 @@ function SettingsTab({
                   customFrameBaseRateFt: Number(e.target.value),
                 } as any)
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#FED100]"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
             />
           </div>
         </div>
@@ -2810,7 +2986,7 @@ function SettingsTab({
                         updated[idx] = { ...opt, name: e.target.value };
                         setForm({ ...form, [key]: updated } as any);
                       }}
-                      className="w-16 text-xs border rounded px-1 py-0.5 text-center focus:outline-none focus:border-[#FED100]"
+                      className="w-16 text-xs border rounded px-1 py-0.5 text-center focus:outline-none focus:border-[var(--tdg-amber)]"
                       placeholder="Name"
                     />
                     <div className="flex items-center gap-0.5">
@@ -2827,7 +3003,7 @@ function SettingsTab({
                           };
                           setForm({ ...form, [key]: updated } as any);
                         }}
-                        className="w-12 text-xs border rounded px-1 py-0.5 text-center focus:outline-none focus:border-[#FED100]"
+                        className="w-12 text-xs border rounded px-1 py-0.5 text-center focus:outline-none focus:border-[var(--tdg-amber)]"
                       />
                     </div>
                     {key !== "frameWoodOptions" &&
@@ -2880,7 +3056,7 @@ function SettingsTab({
                     ];
                     setForm({ ...form, [key]: updated } as any);
                   }}
-                  className="w-16 h-16 bg-[#FED100]/20 border-2 border-dashed border-[#FED100] rounded-lg flex items-center justify-center text-2xl hover:bg-[#FED100]/30"
+                  className="w-16 h-16 bg-[var(--tdg-amber)]/20 border-2 border-dashed border-[var(--tdg-amber)] rounded-lg flex items-center justify-center text-2xl hover:bg-[var(--tdg-amber)]/30"
                 >
                   +
                 </button>
@@ -2893,7 +3069,7 @@ function SettingsTab({
       <button
         type="button"
         onClick={save}
-        className="flex items-center gap-2 bg-[#FED100] text-[#212121] px-6 py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
+        className="flex items-center gap-2 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-6 py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
       >
         <Save size={16} /> {saved ? "Saved!" : "Save All Settings"}
       </button>
@@ -2973,7 +3149,7 @@ function ReviewsTab({
           type="button"
           onClick={openAdd}
           data-ocid="reviews.open_modal_button"
-          className="flex items-center gap-2 bg-[#FED100] text-[#212121] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
+          className="flex items-center gap-2 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e6bc00]"
         >
           <Plus size={16} /> Add Review
         </button>
@@ -3006,7 +3182,7 @@ function ReviewsTab({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold text-sm">{r.name}</span>
-                <span className="text-[#FED100] text-sm">
+                <span className="text-[var(--tdg-amber)] text-sm">
                   {Array.from({ length: r.rating }, (_, i) => (
                     <Star
                       key={`star-${r.id}-${i}`}
@@ -3088,7 +3264,7 @@ function ReviewsTab({
                   value={form.name || ""}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   data-ocid="reviews.input"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
                   placeholder="e.g. Priya S."
                 />
               </div>
@@ -3100,7 +3276,7 @@ function ReviewsTab({
                       key={n}
                       type="button"
                       onClick={() => setForm({ ...form, rating: n })}
-                      className={`w-9 h-9 rounded-lg border-2 flex items-center justify-center transition-colors ${(form.rating || 5) >= n ? "border-[#FED100] bg-[#FED100]/10 text-[#b38b00]" : "border-gray-200 text-gray-300"}`}
+                      className={`w-9 h-9 rounded-lg border-2 flex items-center justify-center transition-colors ${(form.rating || 5) >= n ? "border-[var(--tdg-amber)] bg-[var(--tdg-amber)]/10 text-[#b38b00]" : "border-gray-200 text-gray-300"}`}
                     >
                       <Star
                         size={16}
@@ -3125,7 +3301,7 @@ function ReviewsTab({
                   value={form.text || ""}
                   onChange={(e) => setForm({ ...form, text: e.target.value })}
                   data-ocid="reviews.textarea"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)] resize-none"
                   rows={3}
                   placeholder="Customer's review..."
                 />
@@ -3136,7 +3312,7 @@ function ReviewsTab({
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <label
-                    className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors"
+                    className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[var(--tdg-amber)] transition-colors"
                     data-ocid="reviews.upload_button"
                   >
                     <Upload size={14} /> Upload photo/SMS screenshot
@@ -3189,7 +3365,7 @@ function ReviewsTab({
                     type="date"
                     value={form.date || ""}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
                   />
                 </div>
                 <div className="flex items-end pb-2">
@@ -3212,7 +3388,7 @@ function ReviewsTab({
                 type="button"
                 onClick={saveReview}
                 data-ocid="reviews.save_button"
-                className="flex-1 bg-[#FED100] text-[#212121] py-3 rounded-lg font-bold hover:bg-[#e6bc00] flex items-center justify-center gap-2"
+                className="flex-1 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] py-3 rounded-lg font-bold hover:bg-[#e6bc00] flex items-center justify-center gap-2"
               >
                 <Save size={15} /> {editId ? "Update Review" : "Add Review"}
               </button>
@@ -3275,15 +3451,15 @@ function AboutMeTab({
             <img
               src={profileSrc}
               alt="Profile"
-              className="w-24 h-24 rounded-full object-cover border-4 border-[#FED100] shadow"
+              className="w-24 h-24 rounded-full object-cover border-4 border-[var(--tdg-amber)] shadow"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-[#FED100] flex items-center justify-center text-[#212121] font-bold text-2xl border-4 border-[#FED100]/40 shadow">
+            <div className="w-24 h-24 rounded-full bg-[var(--tdg-amber)] flex items-center justify-center text-[var(--tdg-dark)] font-bold text-2xl border-4 border-[var(--tdg-amber)]/40 shadow">
               {settings.logoText || "TDG"}
             </div>
           )}
           <div className="flex flex-col gap-2">
-            <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[#FED100] transition-colors">
+            <label className="cursor-pointer flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-600 hover:border-[var(--tdg-amber)] transition-colors">
               <Upload size={14} /> Upload Profile Photo
               <input
                 type="file"
@@ -3335,7 +3511,7 @@ function AboutMeTab({
             id="aboutme-tagline"
             value={form.tagline}
             onChange={(e) => setForm({ ...form, tagline: e.target.value })}
-            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
             placeholder="e.g. Artist & Photographer based in Assam"
             data-ocid="about_me.tagline.input"
           />
@@ -3351,7 +3527,7 @@ function AboutMeTab({
             id="aboutme-bio"
             value={form.bio}
             onChange={(e) => setForm({ ...form, bio: e.target.value })}
-            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)] resize-none"
             rows={5}
             placeholder="Tell your story, your passion for photography and art..."
             data-ocid="about_me.bio.textarea"
@@ -3368,7 +3544,7 @@ function AboutMeTab({
             id="aboutme-exp"
             value={form.experience}
             onChange={(e) => setForm({ ...form, experience: e.target.value })}
-            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100] resize-none"
+            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)] resize-none"
             rows={4}
             placeholder="Your journey, achievements, how many years of experience..."
             data-ocid="about_me.experience.textarea"
@@ -3412,7 +3588,7 @@ function AboutMeTab({
               id={`aboutme-${key}`}
               value={(form as Record<string, string>)[key] || ""}
               onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
               placeholder={placeholder}
               data-ocid={`about_me.${key}.input`}
             />
@@ -3456,7 +3632,7 @@ function AboutMeTab({
               id={`aboutme-${key}`}
               value={(form as Record<string, string>)[key] || ""}
               onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[#FED100]"
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-[var(--tdg-amber)]"
               placeholder={placeholder}
               data-ocid={`about_me.${key}.input`}
             />
@@ -3467,7 +3643,7 @@ function AboutMeTab({
       <button
         type="button"
         onClick={save}
-        className="flex items-center gap-2 bg-[#FED100] text-[#212121] px-6 py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
+        className="flex items-center gap-2 bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-6 py-3 rounded-lg font-bold hover:bg-[#e6bc00]"
         data-ocid="about_me.save_button"
       >
         <Save size={16} /> {saved ? "Saved!" : "Save About Me"}

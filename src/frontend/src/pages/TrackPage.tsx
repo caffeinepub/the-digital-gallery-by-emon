@@ -32,15 +32,15 @@ export default function TrackPage() {
   }
 
   const isDark = settings.theme === "dark";
-  const bg = isDark ? "bg-[#1a1a1a]" : "bg-[#f5f5f5]";
+  const bg = isDark ? "bg-[#1a1a1a]" : "bg-[var(--tdg-bg)]";
   const card = isDark
     ? "bg-[#2a2c2a] border-[#444]"
     : "bg-white border-gray-100";
-  const text = isDark ? "text-white" : "text-[#212121]";
+  const text = isDark ? "text-white" : "text-[var(--tdg-dark)]";
   const sub = isDark ? "text-gray-400" : "text-gray-500";
   const inp = isDark
     ? "bg-[#333] border-[#555] text-white placeholder-gray-500"
-    : "bg-white border-gray-300 text-[#212121]";
+    : "bg-white border-gray-300 text-[var(--tdg-dark)]";
 
   if (!settings.trackingEnabled) {
     return (
@@ -65,7 +65,7 @@ export default function TrackPage() {
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-8">
-          <p className="text-[#FED100] text-sm font-semibold uppercase tracking-widest mb-2">
+          <p className="text-[var(--tdg-amber)] text-sm font-semibold uppercase tracking-widest mb-2">
             Order Tracking
           </p>
           <h1 className={`font-playfair text-3xl font-bold ${text}`}>
@@ -83,13 +83,13 @@ export default function TrackPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Enter Order ID (e.g. TDG123456)"
-              className={`flex-1 border rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#FED100] ${inp}`}
+              className={`flex-1 border rounded-lg px-4 py-2.5 focus:outline-none focus:border-[var(--tdg-amber)] ${inp}`}
               onKeyDown={(e) => e.key === "Enter" && search()}
             />
             <button
               type="button"
               onClick={search}
-              className="bg-[#FED100] text-[#212121] px-6 py-2.5 rounded-lg font-semibold hover:bg-[#e6bc00] flex items-center gap-2"
+              className="bg-[var(--tdg-amber)] text-[var(--tdg-dark)] px-6 py-2.5 rounded-lg font-semibold hover:bg-[#e6bc00] flex items-center gap-2"
             >
               <Search size={16} /> Track
             </button>
@@ -109,7 +109,7 @@ export default function TrackPage() {
           <div className={`rounded-2xl shadow-sm border ${card} p-6`}>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <div className="font-mono text-sm text-[#FED100] font-bold">
+                <div className="font-mono text-sm text-[var(--tdg-amber)] font-bold">
                   {order.id}
                 </div>
                 <div className={`font-semibold mt-1 ${text}`}>
@@ -120,7 +120,7 @@ export default function TrackPage() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-[#FED100]">
+                <div className="font-bold text-[var(--tdg-amber)]">
                   &#x20b9;{order.price}
                 </div>
                 <div className={`text-xs mt-1 ${sub}`}>
@@ -141,12 +141,12 @@ export default function TrackPage() {
                         className="flex flex-col items-center flex-1"
                       >
                         <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mb-1 ${done ? "bg-[#FED100] text-[#212121]" : isDark ? "bg-[#444] text-gray-500" : "bg-gray-200 text-gray-400"}`}
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mb-1 ${done ? "bg-[var(--tdg-amber)] text-[var(--tdg-dark)]" : isDark ? "bg-[#444] text-gray-500" : "bg-gray-200 text-gray-400"}`}
                         >
                           {done ? <CheckCircle size={14} /> : i + 1}
                         </div>
                         <div
-                          className={`text-xs text-center leading-tight hidden sm:block ${done ? "text-[#FED100] font-medium" : sub}`}
+                          className={`text-xs text-center leading-tight hidden sm:block ${done ? "text-[var(--tdg-amber)] font-medium" : sub}`}
                         >
                           {STATUS_LABELS[s]}
                         </div>
@@ -156,7 +156,7 @@ export default function TrackPage() {
                 </div>
                 <div className="relative h-1.5 bg-gray-200 rounded-full mt-2">
                   <div
-                    className="absolute left-0 top-0 h-full bg-[#FED100] rounded-full transition-all"
+                    className="absolute left-0 top-0 h-full bg-[var(--tdg-amber)] rounded-full transition-all"
                     style={{
                       width: `${(getStepIndex(order.status) / (STATUS_STEPS.length - 1)) * 100}%`,
                     }}
@@ -172,7 +172,7 @@ export default function TrackPage() {
                     ? "bg-green-100 text-green-700"
                     : order.status === "cancelled"
                       ? "bg-red-100 text-red-700"
-                      : "bg-[#FED100]/20 text-[#b38b00]"
+                      : "bg-[var(--tdg-amber)]/20 text-[#b38b00]"
                 }`}
               >
                 {STATUS_LABELS[order.status]}
